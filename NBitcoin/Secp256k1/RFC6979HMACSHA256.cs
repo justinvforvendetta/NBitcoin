@@ -37,7 +37,7 @@ namespace NBitcoin.Secp256k1
 			hmac.Initialize(k);
 			hmac.Write(v);
 			hmac.Write(one);
-			hmac.Write(k);
+			hmac.Write(key);
 			hmac.Finalize(k);
 			hmac.Initialize(k);
 			hmac.Write(v);

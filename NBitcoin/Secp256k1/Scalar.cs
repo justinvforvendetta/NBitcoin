@@ -806,6 +806,22 @@ namespace NBitcoin.Secp256k1
 				return (d0 | d1 | d2 | d3 | d4 | d5 | d6 | d7) == 0;
 			}
 		}
+
+		public readonly bool IsZeroVariable
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get
+			{
+				return d0 == 0 &&
+					   d1 == 0 &&
+					   d2 == 0 &&
+					   d3 == 0 &&
+					   d4 == 0 &&
+					   d5 == 0 &&
+					   d6 == 0 &&
+					   d7 == 0;
+			}
+		}
 		public readonly bool IsOne
 		{
 			[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.AggressiveInlining)]

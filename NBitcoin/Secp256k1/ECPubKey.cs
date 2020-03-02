@@ -72,6 +72,111 @@ namespace NBitcoin.Secp256k1
 			return false;
 		}
 
+		public bool SigVerify(SecpECDSASignature signature, ReadOnlySpan<byte> msg32)
+		{
+			if (msg32.Length != 32)
+				throw new ArgumentException(paramName: nameof(msg32), message: "msg32 should be 32 bytes");
+			if (signature == null)
+				throw new ArgumentNullException(nameof(signature));
+			Scalar m;
+
+			m = new Scalar(msg32);
+
+			var (r, s) = signature;
+			return (!s.IsHigh &&
+					secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, r, s, Q, m));
+		}
+		/** Group order for secp256k1 defined as 'n' in "Standards for Efficient Cryptography" (SEC2) 2.7.1
+*  sage: for t in xrange(1023, -1, -1):
+*     ..   p = 2**256 - 2**32 - t
+*     ..   if p.is_prime():
+*     ..     print '%x'%p
+*     ..     break
+*   'fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'
+*  sage: a = 0
+*  sage: b = 7
+*  sage: F = FiniteField (p)
+*  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
+*   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
+*/
+		private static readonly FieldElement order_as_fe = FieldElement.SECP256K1_FE_CONST(
+			0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFEU,
+			0xBAAEDCE6U, 0xAF48A03BU, 0xBFD25E8CU, 0xD0364141U
+		);
+
+
+		/** Difference between field and order, values 'p' and 'n' values defined in
+ *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
+ *  sage: p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+ *  sage: a = 0
+ *  sage: b = 7
+ *  sage: F = FiniteField (p)
+ *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
+ *   '14551231950b75fc4402da1722fc9baee'
+ */
+		private static readonly FieldElement p_minus_order = FieldElement.SECP256K1_FE_CONST(
+			0, 0, 0, 1, 0x45512319U, 0x50B75FC4U, 0x402DA172U, 0x2FC9BAEEU
+		);
+		static bool secp256k1_ecdsa_sig_verify(ECMultiplicationContext ctx, in Scalar sigr, in Scalar sigs, in GroupElement pubkey, in Scalar message)
+		{
+			Span<byte> c = stackalloc byte[32];
+			Scalar sn, u1, u2;
+			FieldElement xr;
+			GroupElementJacobian pubkeyj;
+			GroupElementJacobian pr;
+
+			if (sigr.IsZero || sigs.IsZero)
+			{
+				return false;
+			}
+
+			sn = sigs.InverseVariable();
+			u1 = sn * message;
+			u2 = sn * sigr;
+			pubkeyj = pubkey.ToGroupElementJacobian();
+			pr = ctx.ECMultiply(pubkeyj, u2, u1);
+			if (pr.IsInfinity)
+			{
+				return false;
+			}
+			sigr.WriteToSpan(c);
+			xr = new FieldElement(c);
+
+			/* We now have the recomputed R point in pr, and its claimed x coordinate (modulo n)
+			 *  in xr. Naively, we would extract the x coordinate from pr (requiring a inversion modulo p),
+			 *  compute the remainder modulo n, and compare it to xr. However:
+			 *
+			 *        xr == X(pr) mod n
+			 *    <=> exists h. (xr + h * n < p && xr + h * n == X(pr))
+			 *    [Since 2 * n > p, h can only be 0 or 1]
+			 *    <=> (xr == X(pr)) || (xr + n < p && xr + n == X(pr))
+			 *    [In Jacobian coordinates, X(pr) is pr.x / pr.z^2 mod p]
+			 *    <=> (xr == pr.x / pr.z^2 mod p) || (xr + n < p && xr + n == pr.x / pr.z^2 mod p)
+			 *    [Multiplying both sides of the equations by pr.z^2 mod p]
+			 *    <=> (xr * pr.z^2 mod p == pr.x) || (xr + n < p && (xr + n) * pr.z^2 mod p == pr.x)
+			 *
+			 *  Thus, we can avoid the inversion, but we have to check both cases separately.
+			 *  secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
+			 */
+			if (xr.EqualsXVariable(pr))
+			{
+				/* xr * pr.z^2 mod p == pr.x, so the signature is valid. */
+				return true;
+			}
+			if (xr.CompareToVariable(p_minus_order) >= 0)
+			{
+				/* xr + n >= p, so we can skip testing the second case. */
+				return false;
+			}
+			xr += order_as_fe;
+			if (xr.EqualsXVariable(pr))
+			{
+				/* (xr + n) * pr.z^2 mod p == pr.x, so the signature is valid. */
+				return true;
+			}
+			return false;
+		}
+
 		public ECPubKey Negate()
 		{
 			return new ECPubKey(Q.Negate(), ctx);

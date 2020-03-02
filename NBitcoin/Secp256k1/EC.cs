@@ -24,7 +24,7 @@ namespace NBitcoin.Secp256k1
 		public const byte SECP256K1_TAG_PUBKEY_HYBRID_EVEN = 0x06;
 		public const byte SECP256K1_TAG_PUBKEY_HYBRID_ODD = 0x07;
 
-		public static bool Pubkey_parse(ReadOnlySpan<byte> pub, out GroupElement elem)
+		internal static bool Pubkey_parse(ReadOnlySpan<byte> pub, out GroupElement elem)
 		{
 			elem = default;
 			if (pub.Length == 33 && (pub[0] == SECP256K1_TAG_PUBKEY_EVEN || pub[0] == SECP256K1_TAG_PUBKEY_ODD))

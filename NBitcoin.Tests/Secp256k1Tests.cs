@@ -318,6 +318,109 @@ namespace NBitcoin.Tests
 
 		[Fact]
 		[Trait("UnitTest", "UnitTest")]
+		public void run_hmac_sha256_tests()
+		{
+			var keys = new string[]{
+		"\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b",
+		"\x4a\x65\x66\x65",
+		"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa",
+		"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19",
+		"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa",
+		"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
+	};
+			var inputs = new string[]{
+		"\x48\x69\x20\x54\x68\x65\x72\x65",
+		"\x77\x68\x61\x74\x20\x64\x6f\x20\x79\x61\x20\x77\x61\x6e\x74\x20\x66\x6f\x72\x20\x6e\x6f\x74\x68\x69\x6e\x67\x3f",
+		"\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd\xdd",
+		"\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd\xcd",
+		"\x54\x65\x73\x74\x20\x55\x73\x69\x6e\x67\x20\x4c\x61\x72\x67\x65\x72\x20\x54\x68\x61\x6e\x20\x42\x6c\x6f\x63\x6b\x2d\x53\x69\x7a\x65\x20\x4b\x65\x79\x20\x2d\x20\x48\x61\x73\x68\x20\x4b\x65\x79\x20\x46\x69\x72\x73\x74",
+		"\x54\x68\x69\x73\x20\x69\x73\x20\x61\x20\x74\x65\x73\x74\x20\x75\x73\x69\x6e\x67\x20\x61\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x62\x6c\x6f\x63\x6b\x2d\x73\x69\x7a\x65\x20\x6b\x65\x79\x20\x61\x6e\x64\x20\x61\x20\x6c\x61\x72\x67\x65\x72\x20\x74\x68\x61\x6e\x20\x62\x6c\x6f\x63\x6b\x2d\x73\x69\x7a\x65\x20\x64\x61\x74\x61\x2e\x20\x54\x68\x65\x20\x6b\x65\x79\x20\x6e\x65\x65\x64\x73\x20\x74\x6f\x20\x62\x65\x20\x68\x61\x73\x68\x65\x64\x20\x62\x65\x66\x6f\x72\x65\x20\x62\x65\x69\x6e\x67\x20\x75\x73\x65\x64\x20\x62\x79\x20\x74\x68\x65\x20\x48\x4d\x41\x43\x20\x61\x6c\x67\x6f\x72\x69\x74\x68\x6d\x2e"
+	};
+			byte[][] outputs = new[]
+			{
+				new byte[] { 0xb0, 0x34, 0x4c, 0x61, 0xd8, 0xdb, 0x38, 0x53, 0x5c, 0xa8, 0xaf, 0xce, 0xaf, 0x0b, 0xf1, 0x2b, 0x88, 0x1d, 0xc2, 0x00, 0xc9, 0x83, 0x3d, 0xa7, 0x26, 0xe9, 0x37, 0x6c, 0x2e, 0x32, 0xcf, 0xf7 },
+				new byte[] { 0x5b, 0xdc, 0xc1, 0x46, 0xbf, 0x60, 0x75, 0x4e, 0x6a, 0x04, 0x24, 0x26, 0x08, 0x95, 0x75, 0xc7, 0x5a, 0x00, 0x3f, 0x08, 0x9d, 0x27, 0x39, 0x83, 0x9d, 0xec, 0x58, 0xb9, 0x64, 0xec, 0x38, 0x43 },
+				new byte[] { 0x77, 0x3e, 0xa9, 0x1e, 0x36, 0x80, 0x0e, 0x46, 0x85, 0x4d, 0xb8, 0xeb, 0xd0, 0x91, 0x81, 0xa7, 0x29, 0x59, 0x09, 0x8b, 0x3e, 0xf8, 0xc1, 0x22, 0xd9, 0x63, 0x55, 0x14, 0xce, 0xd5, 0x65, 0xfe },
+				new byte[] { 0x82, 0x55, 0x8a, 0x38, 0x9a, 0x44, 0x3c, 0x0e, 0xa4, 0xcc, 0x81, 0x98, 0x99, 0xf2, 0x08, 0x3a, 0x85, 0xf0, 0xfa, 0xa3, 0xe5, 0x78, 0xf8, 0x07, 0x7a, 0x2e, 0x3f, 0xf4, 0x67, 0x29, 0x66, 0x5b },
+				new byte[] { 0x60, 0xe4, 0x31, 0x59, 0x1e, 0xe0, 0xb6, 0x7f, 0x0d, 0x8a, 0x26, 0xaa, 0xcb, 0xf5, 0xb7, 0x7f, 0x8e, 0x0b, 0xc6, 0x21, 0x37, 0x28, 0xc5, 0x14, 0x05, 0x46, 0x04, 0x0f, 0x0e, 0xe3, 0x7f, 0x54 },
+				new byte[] { 0x9b, 0x09, 0xff, 0xa7, 0x1b, 0x94, 0x2f, 0xcb, 0x27, 0x63, 0x5f, 0xbc, 0xd5, 0xb0, 0xe9, 0x44, 0xbf, 0xdc, 0x63, 0x64, 0x4f, 0x07, 0x13, 0x93, 0x8a, 0x7f, 0x51, 0x53, 0x5c, 0x3a, 0x35, 0xe2 }
+			};
+			int i;
+			for (i = 0; i < 6; i++)
+			{
+				Secp256k1.HMACSHA256 hasher = new Secp256k1.HMACSHA256();
+				Span<byte> output = stackalloc byte[32];
+				hasher.Initialize(ToBytes(keys[i]));
+				hasher.Write(ToBytes(inputs[i]));
+				hasher.Finalize(output);
+				Assert.True(Utils.ArrayEqual(output.ToArray(), outputs[i]));
+
+				if (inputs[i].Length > 0)
+				{
+					var split = secp256k1_rand_int((uint)inputs[i].Length);
+					hasher.Initialize(ToBytes(keys[i]));
+					hasher.Write(ToBytes(inputs[i]).AsSpan().Slice(0, (int)split));
+					hasher.Write(ToBytes(inputs[i]).AsSpan().Slice((int)split));
+					hasher.Finalize(output);
+					Assert.True(Utils.ArrayEqual(output.ToArray(), outputs[i]));
+				}
+			}
+		}
+
+		private byte[] ToBytes(string v)
+		{
+			return v.ToCharArray().Select(c => (byte)c).ToArray();
+		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
+		public void run_rfc6979_hmac_sha256_tests()
+		{
+			byte[] key1 = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x00, 0x4b, 0xf5, 0x12, 0x2f, 0x34, 0x45, 0x54, 0xc5, 0x3b, 0xde, 0x2e, 0xbb, 0x8c, 0xd2, 0xb7, 0xe3, 0xd1, 0x60, 0x0a, 0xd6, 0x31, 0xc3, 0x85, 0xa5, 0xd7, 0xcc, 0xe2, 0x3c, 0x77, 0x85, 0x45, 0x9a, 0 };
+			byte[][] out1 = new[] {
+					new byte[] {0x4f, 0xe2, 0x95, 0x25, 0xb2, 0x08, 0x68, 0x09, 0x15, 0x9a, 0xcd, 0xf0, 0x50, 0x6e, 0xfb, 0x86, 0xb0, 0xec, 0x93, 0x2c, 0x7b, 0xa4, 0x42, 0x56, 0xab, 0x32, 0x1e, 0x42, 0x1e, 0x67, 0xe9, 0xfb},
+					new byte[] {0x2b, 0xf0, 0xff, 0xf1, 0xd3, 0xc3, 0x78, 0xa2, 0x2d, 0xc5, 0xde, 0x1d, 0x85, 0x65, 0x22, 0x32, 0x5c, 0x65, 0xb5, 0x04, 0x49, 0x1a, 0x0c, 0xbd, 0x01, 0xcb, 0x8f, 0x3a, 0xa6, 0x7f, 0xfd, 0x4a},
+					new byte[] {0xf5, 0x28, 0xb4, 0x10, 0xcb, 0x54, 0x1f, 0x77, 0x00, 0x0d, 0x7a, 0xfb, 0x6c, 0x5b, 0x53, 0xc5, 0xc4, 0x71, 0xea, 0xb4, 0x3e, 0x46, 0x6d, 0x9a, 0xc5, 0x19, 0x0c, 0x39, 0xc8, 0x2f, 0xd8, 0x2e}
+			};
+
+			byte[] key2 = new byte[] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9, 0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52, 0xb8, 0x55 };
+			byte[][] out2 = new[]{
+					new byte[] { 0x9c, 0x23, 0x6c, 0x16, 0x5b, 0x82, 0xae, 0x0c, 0xd5, 0x90, 0x65, 0x9e, 0x10, 0x0b, 0x6b, 0xab, 0x30, 0x36, 0xe7, 0xba, 0x8b, 0x06, 0x74, 0x9b, 0xaf, 0x69, 0x81, 0xe1, 0x6f, 0x1a, 0x2b, 0x95},
+					new byte[] { 0xdf, 0x47, 0x10, 0x61, 0x62, 0x5b, 0xc0, 0xea, 0x14, 0xb6, 0x82, 0xfe, 0xee, 0x2c, 0x9c, 0x02, 0xf2, 0x35, 0xda, 0x04, 0x20, 0x4c, 0x1d, 0x62, 0xa1, 0x53, 0x6c, 0x6e, 0x17, 0xae, 0xd7, 0xa9},
+					new byte[] { 0x75, 0x97, 0x88, 0x7c, 0xbd, 0x76, 0x32, 0x1f, 0x32, 0xe3, 0x04, 0x40, 0x67, 0x9a, 0x22, 0xcf, 0x7f, 0x8d, 0x9d, 0x2e, 0xac, 0x39, 0x0e, 0x58, 0x1f, 0xea, 0x09, 0x1c, 0xe2, 0x02, 0xba, 0x94}
+			};
+
+			using RFC6979HMACSHA256 rng = new RFC6979HMACSHA256();
+			Span<byte> output = stackalloc byte[32];
+			output.Fill(0);
+			int i;
+			rng.Initialize(key1.AsSpan().Slice(0, 64));
+			for (i = 0; i < 3; i++)
+			{
+				rng.Generate(output);
+				Assert.True(Utils.ArrayEqual(output.ToArray(), out1[i]));
+			}
+			rng.Dispose();
+
+			rng.Initialize(key1);
+			for (i = 0; i < 3; i++)
+			{
+				rng.Generate(output);
+				Assert.False(Utils.ArrayEqual(output.ToArray(), out1[i]));
+			}
+			rng.Dispose();
+
+			rng.Initialize(key2.AsSpan().Slice(0, 64));
+			for (i = 0; i < 3; i++)
+			{
+				rng.Generate(output);
+				Assert.True(Utils.ArrayEqual(output.ToArray(), out2[i]));
+			}
+			rng.Dispose();
+		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
 		public void run_ecdsa_end_to_end()
 		{
 			int i;
@@ -336,7 +439,7 @@ namespace NBitcoin.Tests
 			byte[] message = new byte[32];
 			ECPrivKey privkey2 = null;
 
-			ECDSASignature[] signature = new ECDSASignature[6];
+			SecpECDSASignature[] signature = new SecpECDSASignature[6];
 			Scalar r, s;
 			byte[] sig = new byte[74];
 			int siglen = 74;
@@ -409,55 +512,57 @@ namespace NBitcoin.Tests
 				Assert.Equal(pubkey, pubkey2);
 			}
 
-			///* Sign. */
-			//Assert.True(secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
-			//Assert.True(secp256k1_ecdsa_sign(ctx, &signature[4], message, privkey, NULL, NULL) == 1);
-			//Assert.True(secp256k1_ecdsa_sign(ctx, &signature[1], message, privkey, NULL, extra) == 1);
-			//extra[31] = 1;
-			//Assert.True(secp256k1_ecdsa_sign(ctx, &signature[2], message, privkey, NULL, extra) == 1);
-			//extra[31] = 0;
-			//extra[0] = 1;
-			//Assert.True(secp256k1_ecdsa_sign(ctx, &signature[3], message, privkey, NULL, extra) == 1);
-			//Assert.True(memcmp(&signature[0], &signature[4], sizeof(signature[0])) == 0);
-			//Assert.True(memcmp(&signature[0], &signature[1], sizeof(signature[0])) != 0);
-			//Assert.True(memcmp(&signature[0], &signature[2], sizeof(signature[0])) != 0);
-			//Assert.True(memcmp(&signature[0], &signature[3], sizeof(signature[0])) != 0);
-			//Assert.True(memcmp(&signature[1], &signature[2], sizeof(signature[0])) != 0);
-			//Assert.True(memcmp(&signature[1], &signature[3], sizeof(signature[0])) != 0);
-			//Assert.True(memcmp(&signature[2], &signature[3], sizeof(signature[0])) != 0);
-			///* Verify. */
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[1], message, &pubkey) == 1);
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[2], message, &pubkey) == 1);
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[3], message, &pubkey) == 1);
-			///* Test lower-S form, malleate, verify and fail, test again, malleate again */
-			//Assert.True(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[0]));
-			//secp256k1_ecdsa_signature_load(ctx, &r, &s, &signature[0]);
-			//secp256k1_scalar_negate(&s, &s);
-			//secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 0);
-			//Assert.True(secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
-			//Assert.True(secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
-			//Assert.True(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
-			//Assert.True(!secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
-			//secp256k1_scalar_negate(&s, &s);
-			//secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
-			//Assert.True(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
-			//Assert.True(memcmp(&signature[5], &signature[0], 64) == 0);
-
-			///* Serialize/parse DER and verify again */
-			//Assert.True(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
-			//memset(&signature[0], 0, sizeof(signature[0]));
-			//Assert.True(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
-			//Assert.True(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
-			///* Serialize/destroy/parse DER and verify again. */
-			//siglen = 74;
-			//Assert.True(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
-			//sig[secp256k1_rand_int(siglen)] += 1 + secp256k1_rand_int(255);
-			//Assert.True(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
-			//	  secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
+			/* Sign. */
+			Assert.True(privkey.TrySignECDSA(message, out signature[0]));
+			Assert.True(privkey.TrySignECDSA(message, out signature[4]));
+			Assert.True(privkey.TrySignECDSA(message, new RFC6979NonceFunction(extra), out signature[1]));
+			extra[31] = 1;
+			Assert.True(privkey.TrySignECDSA(message, new RFC6979NonceFunction(extra), out signature[2]));
+			extra[31] = 0;
+			extra[0] = 1;
+			Assert.True(privkey.TrySignECDSA(message, new RFC6979NonceFunction(extra), out signature[3]));
+			Assert.Equal(signature[0], signature[4]);
+			Assert.NotEqual(signature[0], signature[1]);
+			Assert.NotEqual(signature[0], signature[2]);
+			Assert.NotEqual(signature[0], signature[3]);
+			Assert.NotEqual(signature[1], signature[2]);
+			Assert.NotEqual(signature[1], signature[3]);
+			Assert.NotEqual(signature[2], signature[3]);
+			/* Verify. */
+			Assert.True(pubkey.SigVerify(signature[0], message));
+			Assert.True(pubkey.SigVerify(signature[1], message));
+			Assert.True(pubkey.SigVerify(signature[2], message));
+			Assert.True(pubkey.SigVerify(signature[3], message));
+			/* Test lower-S form, malleate, verify and fail, test again, malleate again */
+			Assert.True(!signature[0].TryNormalize(out _));
+			(r, s) = signature[0];
+			s = s.Negate();
+			signature[5] = new SecpECDSASignature(r, s);
+			Assert.False(pubkey.SigVerify(signature[5], message));
+			Assert.True(signature[5].TryNormalize(out _));
+			Assert.True(signature[5].TryNormalize(out signature[5]));
+			Assert.False(signature[5].TryNormalize(out _));
+			Assert.False(signature[5].TryNormalize(out signature[5]));
+			Assert.True(pubkey.SigVerify(signature[5], message));
+			s = s.Negate();
+			signature[5] = new SecpECDSASignature(r, s);
+			Assert.False(signature[5].TryNormalize(out _));
+			Assert.True(pubkey.SigVerify(signature[5], message));
+			Assert.Equal(signature[5], signature[0]);
+			/* Serialize/parse DER and verify again */
+			Assert.True(signature[0].WriteDerToSpan(sig, out siglen));
+			signature[0] = null;
+			var sigspan = sig.AsSpan().Slice(0, siglen);
+			Assert.True(SecpECDSASignature.TryCreateFromDer(sigspan, out signature[0]));
+			Assert.True(pubkey.SigVerify(signature[0], message));
+			/* Serialize/destroy/parse DER and verify again. */
+			siglen = 74;
+			sigspan = sig.AsSpan().Slice(0, siglen);
+			Assert.True(signature[0].WriteDerToSpan(sigspan, out siglen));
+			sigspan = sig.AsSpan().Slice(0, siglen);
+			sig[secp256k1_rand_int((uint)siglen)] += (byte)(1 + secp256k1_rand_int(255));
+			Assert.True(!SecpECDSASignature.TryCreateFromDer(sigspan, out signature[0]) ||
+				  !pubkey.SigVerify(signature[0], message));
 		}
 
 		[Fact]
@@ -866,35 +971,35 @@ namespace NBitcoin.Tests
 		public void test_add_neg_y_diff_x()
 		{
 			/* The point of this test is to check that we can add two points
-	* whose y-coordinates are negatives of each other but whose x
-	* coordinates differ. If the x-coordinates were the same, these
-	* points would be negatives of each other and their sum is
-	* infinity. This is cool because it "covers up" any degeneracy
-	* in the addition algorithm that would cause the xy coordinates
-	* of the sum to be wrong (since infinity has no xy coordinates).
-	* HOWEVER, if the x-coordinates are different, infinity is the
-	* wrong answer, and such degeneracies are exposed. This is the
-	* root of https://github.com/bitcoin-core/secp256k1/issues/257
-	* which this test is a regression test for.
-	*
-	* These points were generated in sage as
-	* # secp256k1 params
-	* F = FiniteField (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F)
-	* C = EllipticCurve ([F (0), F (7)])
-	* G = C.lift_x(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798)
-	* N = FiniteField(G.order())
-	*
-	* # endomorphism values (lambda is 1^{1/3} in N, beta is 1^{1/3} in F)
-	* x = polygen(N)
-	* lam  = (1 - x^3).roots()[1][0]
-	*
-	* # random "bad pair"
-	* P = C.random_element()
-	* Q = -int(lam) * P
-	* print "    P: %x %x" % P.xy()
-	* print "    Q: %x %x" % Q.xy()
-	* print "P + Q: %x %x" % (P + Q).xy()
-	*/
+		* whose y-coordinates are negatives of each other but whose x
+		* coordinates differ. If the x-coordinates were the same, these
+		* points would be negatives of each other and their sum is
+		* infinity. This is cool because it "covers up" any degeneracy
+		* in the addition algorithm that would cause the xy coordinates
+		* of the sum to be wrong (since infinity has no xy coordinates).
+		* HOWEVER, if the x-coordinates are different, infinity is the
+		* wrong answer, and such degeneracies are exposed. This is the
+		* root of https://github.com/bitcoin-core/secp256k1/issues/257
+		* which this test is a regression test for.
+		*
+		* These points were generated in sage as
+		* # secp256k1 params
+		* F = FiniteField (0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F)
+		* C = EllipticCurve ([F (0), F (7)])
+		* G = C.lift_x(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798)
+		* N = FiniteField(G.order())
+		*
+		* # endomorphism values (lambda is 1^{1/3} in N, beta is 1^{1/3} in F)
+		* x = polygen(N)
+		* lam  = (1 - x^3).roots()[1][0]
+		*
+		* # random "bad pair"
+		* P = C.random_element()
+		* Q = -int(lam) * P
+		* print "    P: %x %x" % P.xy()
+		* print "    Q: %x %x" % Q.xy()
+		* print "P + Q: %x %x" % (P + Q).xy()
+		*/
 			GroupElementJacobian aj = GroupElementJacobian.SECP256K1_GEJ_CONST(
 				0x8d24cd95, 0x0a355af1, 0x3c543505, 0x44238d30,
 				0x0643d79f, 0x05a59614, 0x2f8ec030, 0xd58977cb,
@@ -939,12 +1044,12 @@ namespace NBitcoin.Tests
 			int i, i1;
 			int runs = 6;
 			/* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
-     * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
-     * All magnitudes are randomized.
-     * All 17*17 combinations of points are added to each other, using all applicable methods.
-     *
-     * When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
-     */
+		* The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
+		* All magnitudes are randomized.
+		* All 17*17 combinations of points are added to each other, using all applicable methods.
+		*
+		* When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
+		*/
 			GroupElement[] ge = new GroupElement[1 + 4 * runs];
 			GroupElementJacobian[] gej = new GroupElementJacobian[1 + 4 * runs];
 			FieldElement[] zinv = new FieldElement[1 + 4 * runs];

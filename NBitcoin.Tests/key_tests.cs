@@ -293,9 +293,9 @@ namespace NBitcoin.Tests
 		private bool VerifySig(PubKey pubkey, uint256 h, ECDSASignature sig)
 		{
 			var ok1 = pubkey.Verify(h, sig);
-			Assert.True(Secp256k1.ECDSA.DerParseSigParse(out var r, out var s, sig.ToDER()));
-			Secp256k1.EC.Pubkey_parse(pubkey.ToBytes(), out var pubkeyge);
-			var ok2 = Secp256k1.ECDSA.Instance.SigVerify(r, s, pubkeyge, new Secp256k1.Scalar(h.ToBytes()));
+			Assert.True(Secp256k1.SecpECDSASignature.TryCreateFromDer(sig.ToDER(), out var secpSig));
+			Assert.True(Secp256k1.Context.Instance.TryCreatePubKey(pubkey.ToBytes(), out var secppubkey));
+			var ok2 = secppubkey.SigVerify(secpSig, h.ToBytes());
 			Assert.Equal(ok1, ok2);
 			return ok1;
 		}
