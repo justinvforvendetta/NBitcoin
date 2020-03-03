@@ -40,6 +40,13 @@ namespace NBitcoin.Secp256k1
 			if (!value)
 				throw new InvalidOperationException("VERIFY_CHECK failed (bug in C# secp256k1)");
 		}
+		public const int MaxLength = 74;
+		public byte[] ToDER()
+		{
+			Span<byte> sig = stackalloc byte[74];
+			WriteDerToSpan(sig, out int len);
+			return sig.Slice(0, len).ToArray();
+		}
 
 		public bool TryNormalize(out SecpECDSASignature normalized)
 		{

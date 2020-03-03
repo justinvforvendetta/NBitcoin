@@ -1106,30 +1106,22 @@ namespace NBitcoin.Secp256k1
 		[MethodImpl(MethodImplOptions.NoOptimization)]
 		public static void CMov(ref FieldElement r, FieldElement a, int flag)
 		{
-			Span<uint> n = stackalloc uint[NCount];
-			int magnitude;
-			bool normalized;
-			r.Deconstruct(ref n, out magnitude, out normalized);
-
 			uint mask0, mask1;
 			mask0 = (uint)flag + ~((uint)0);
 			mask1 = ~mask0;
-			n[0] = (n[0] & mask0) | (a.n0 & mask1);
-			n[1] = (n[1] & mask0) | (a.n1 & mask1);
-			n[2] = (n[2] & mask0) | (a.n2 & mask1);
-			n[3] = (n[3] & mask0) | (a.n3 & mask1);
-			n[4] = (n[4] & mask0) | (a.n4 & mask1);
-			n[5] = (n[5] & mask0) | (a.n5 & mask1);
-			n[6] = (n[6] & mask0) | (a.n6 & mask1);
-			n[7] = (n[7] & mask0) | (a.n7 & mask1);
-			n[8] = (n[8] & mask0) | (a.n8 & mask1);
-			n[9] = (n[9] & mask0) | (a.n9 & mask1);
-			if (a.magnitude > magnitude)
-			{
-				magnitude = a.magnitude;
-			}
-			normalized &= a.normalized;
-			r = new FieldElement(n, magnitude, normalized);
+			r = new FieldElement(
+				(r.n0 & mask0) | (a.n0 & mask1),
+				(r.n1 & mask0) | (a.n1 & mask1),
+				(r.n2 & mask0) | (a.n2 & mask1),
+				(r.n3 & mask0) | (a.n3 & mask1),
+				(r.n4 & mask0) | (a.n4 & mask1),
+				(r.n5 & mask0) | (a.n5 & mask1),
+				(r.n6 & mask0) | (a.n6 & mask1),
+				(r.n7 & mask0) | (a.n7 & mask1),
+				(r.n8 & mask0) | (a.n8 & mask1),
+				(r.n9 & mask0) | (a.n9 & mask1),
+				a.magnitude > r.magnitude ? a.magnitude : r.magnitude,
+				r.normalized & a.normalized);
 		}
 
 		public FieldElement(uint n0, uint n1, uint n2, uint n3, uint n4, uint n5, uint n6, uint n7, uint n8, uint n9, int magnitude, bool normalized)

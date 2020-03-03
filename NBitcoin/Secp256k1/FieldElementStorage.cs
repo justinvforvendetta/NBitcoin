@@ -84,20 +84,18 @@ namespace NBitcoin.Secp256k1
 		[MethodImpl(MethodImplOptions.NoOptimization)]
 		public static void CMov(ref FieldElementStorage r, in FieldElementStorage a, int flag)
 		{
-			Span<uint> n = stackalloc uint[NCount];
-			r.Deconstruct(ref n);
 			uint mask0, mask1;
 			mask0 = (uint)flag + ~((uint)0);
 			mask1 = ~mask0;
-			n[0] = (n[0] & mask0) | (a.n0 & mask1);
-			n[1] = (n[1] & mask0) | (a.n1 & mask1);
-			n[2] = (n[2] & mask0) | (a.n2 & mask1);
-			n[3] = (n[3] & mask0) | (a.n3 & mask1);
-			n[4] = (n[4] & mask0) | (a.n4 & mask1);
-			n[5] = (n[5] & mask0) | (a.n5 & mask1);
-			n[6] = (n[6] & mask0) | (a.n6 & mask1);
-			n[7] = (n[7] & mask0) | (a.n7 & mask1);
-			r = new FieldElementStorage(n);
+			r = new FieldElementStorage(
+				(r.n0 & mask0) | (a.n0 & mask1),
+				(r.n1 & mask0) | (a.n1 & mask1),
+				(r.n2 & mask0) | (a.n2 & mask1),
+				(r.n3 & mask0) | (a.n3 & mask1),
+				(r.n4 & mask0) | (a.n4 & mask1),
+				(r.n5 & mask0) | (a.n5 & mask1),
+				(r.n6 & mask0) | (a.n6 & mask1),
+				(r.n7 & mask0) | (a.n7 & mask1));
 		}
 
 		public void Deconstruct(ref Span<uint> n)

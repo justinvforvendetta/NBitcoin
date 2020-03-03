@@ -10,7 +10,8 @@ namespace NBitcoin.Tests
 	{
 		public static void Main()
 		{
-			new key_tests().key_test1();
+			new Secp256k1Tests(null).can_sign_deterministically();
+			//new key_tests().key_test1();
 			//new Secp256k1Tests(null).run_ge();
 		}
 	}

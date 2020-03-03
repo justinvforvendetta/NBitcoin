@@ -29,6 +29,27 @@ namespace NBitcoin.Tests
 
 		[Fact]
 		[Trait("UnitTest", "UnitTest")]
+		public void can_sign_deterministically()
+		{
+			ECDSASignature sig = null;
+			SecpECDSASignature sig2 = null;
+			var data = RandomUtils.GetUInt256();
+			var datab = data.ToBytes();
+			var key = new Key();
+			var eckey = Context.Instance.CreateECPrivKey(key.ToBytes());
+			var ecpubkey = eckey.CreatePubKey();
+			for (int i = 0; i < 10000; i++)
+			{
+				sig = key.Sign(data, false);
+				Assert.True(key.PubKey.Verify(data, sig));
+				sig2 = eckey.SignECDSARFC6979(datab);
+				Assert.True(ecpubkey.SigVerify(sig2, datab));
+			}
+			Assert.True(Utils.ArrayEqual(sig.ToDER(), sig2.ToDER()));
+		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
 		public void run_field_inv()
 		{
 			FieldElement x, xi, xii;
