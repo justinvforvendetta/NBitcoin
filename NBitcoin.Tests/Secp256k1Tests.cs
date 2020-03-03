@@ -31,21 +31,16 @@ namespace NBitcoin.Tests
 		[Trait("UnitTest", "UnitTest")]
 		public void can_sign_deterministically()
 		{
-			ECDSASignature sig = null;
-			SecpECDSASignature sig2 = null;
-			var data = RandomUtils.GetUInt256();
-			var datab = data.ToBytes();
-			var key = new Key();
-			var eckey = Context.Instance.CreateECPrivKey(key.ToBytes());
+			var key = DataEncoders.Encoders.Hex.DecodeData("52561d97bd6bd2d1aa07e55bf8803e65b63ad76fce819badbf39e00ba14abbb5");
+			var data = DataEncoders.Encoders.Hex.DecodeData("1ad99601407cd7859f933a5040f797ac3a9516338b3a0312838f06a07d043147");
+			var eckey = Context.Instance.CreateECPrivKey(key);
 			var ecpubkey = eckey.CreatePubKey();
-			for (int i = 0; i < 10000; i++)
-			{
-				sig = key.Sign(data, false);
-				Assert.True(key.PubKey.Verify(data, sig));
-				sig2 = eckey.SignECDSARFC6979(datab);
-				Assert.True(ecpubkey.SigVerify(sig2, datab));
-			}
-			Assert.True(Utils.ArrayEqual(sig.ToDER(), sig2.ToDER()));
+			var expectedpubkey = DataEncoders.Encoders.Hex.DecodeData("038debad560e99727fa9d279f4799f9d576acc69b962f6b5fc4755ccef02a0d0dd");
+			Assert.True(Utils.ArrayEqual(expectedpubkey, ecpubkey.ToBytes()));
+			var sig = eckey.SignECDSARFC6979(data);
+			var expectedSig = DataEncoders.Encoders.Hex.DecodeData("3044022023632637ba55497e309b858fe23b4b6354c1842a99f1deeee805a649082c370702202cf2dd37a8c02e38d06fe560dd33f5f006044d43b9ab4f5185c4405924a17896");
+			Assert.True(ecpubkey.SigVerify(sig, data));
+			Assert.True(Utils.ArrayEqual(expectedSig, sig.ToDER()));
 		}
 
 		[Fact]

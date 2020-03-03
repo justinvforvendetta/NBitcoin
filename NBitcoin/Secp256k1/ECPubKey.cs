@@ -297,6 +297,17 @@ namespace NBitcoin.Secp256k1
 			return ret;
 		}
 
+		public byte[] ToBytes()
+		{
+			return ToBytes(true);
+		}
+		public byte[] ToBytes(bool compressed)
+		{
+			Span<byte> b = stackalloc byte[33];
+			WriteToSpan(compressed, b, out _);
+			return b.ToArray();
+		}
+
 		private static bool secp256k1_eckey_pubkey_tweak_mul(ECMultiplicationContext ctx, ref GroupElement key, in Scalar tweak)
 		{
 			Scalar zero;
