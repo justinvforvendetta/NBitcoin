@@ -28,9 +28,15 @@ namespace NBitcoin.Secp256k1
 
 		internal static bool Pubkey_parse(ReadOnlySpan<byte> pub, out GroupElement elem)
 		{
+			return Pubkey_parse(pub, out _, out elem);
+		}
+		internal static bool Pubkey_parse(ReadOnlySpan<byte> pub, out bool compressed, out GroupElement elem)
+		{
+			compressed = false;
 			elem = default;
 			if (pub.Length == 33 && (pub[0] == SECP256K1_TAG_PUBKEY_EVEN || pub[0] == SECP256K1_TAG_PUBKEY_ODD))
 			{
+				compressed = true;
 				return
 					FieldElement.TryCreate(pub.Slice(1), out var x) &&
 					GroupElement.TryCreateXOVariable(x, pub[0] == SECP256K1_TAG_PUBKEY_ODD, out elem);

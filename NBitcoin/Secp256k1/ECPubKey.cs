@@ -47,11 +47,11 @@ namespace NBitcoin.Secp256k1
 			}
 		}
 
-		public static bool TryCreate(ReadOnlySpan<byte> input, Context ctx, out ECPubKey? pubkey)
+		public static bool TryCreate(ReadOnlySpan<byte> input, Context ctx, out bool compressed, out ECPubKey? pubkey)
 		{
 			GroupElement Q;
 			pubkey = null;
-			if (!EC.Pubkey_parse(input, out Q))
+			if (!EC.Pubkey_parse(input, out compressed, out Q))
 				return false;
 			pubkey = new ECPubKey(Q, ctx);
 			Q = default;

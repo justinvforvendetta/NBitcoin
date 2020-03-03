@@ -50,7 +50,11 @@ namespace NBitcoin.Secp256k1
 
 		public bool TryCreatePubKey(ReadOnlySpan<byte> input, out ECPubKey? pubkey)
 		{
-			return ECPubKey.TryCreate(input, this, out pubkey);
+			return ECPubKey.TryCreate(input, this, out _, out pubkey);
+		}
+		public bool TryCreatePubKey(ReadOnlySpan<byte> input, out bool compressed, out ECPubKey? pubkey)
+		{
+			return ECPubKey.TryCreate(input, this, out compressed, out pubkey);
 		}
 		public bool TryCreatePrivKeyFromDer(ReadOnlySpan<byte> input, out ECPrivKey? privkey)
 		{
