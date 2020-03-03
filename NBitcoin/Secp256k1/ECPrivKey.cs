@@ -26,7 +26,7 @@ namespace NBitcoin.Secp256k1
 	*/
 	interface INonceFunction
 	{
-		bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter);
+		bool TryGetNonce(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter);
 	}
 	class PrecomputedNonceFunction : INonceFunction
 	{
@@ -35,7 +35,7 @@ namespace NBitcoin.Secp256k1
 		{
 			this.nonce = nonce;
 		}
-		public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+		public bool TryGetNonce(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
 		{
 			nonce.AsSpan().Slice(0, 32).CopyTo(nonce32);
 			return counter == 0;
@@ -49,7 +49,7 @@ namespace NBitcoin.Secp256k1
 			this.data = nonceData;
 		}
 		public static RFC6979NonceFunction Instance { get; } = new RFC6979NonceFunction();
-		public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+		public bool TryGetNonce(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
 		{
 			Span<byte> keydata = stackalloc byte[112];
 			Span<byte> originalKeyData = keydata;
@@ -628,7 +628,7 @@ namespace NBitcoin.Secp256k1
 			var alg16 = new ReadOnlySpan<byte>();
 			while (true)
 			{
-				ret = nonceFunction.TrySign(nonce32, msg32, seckey, alg16, count);
+				ret = nonceFunction.TryGetNonce(nonce32, msg32, seckey, alg16, count);
 				if (!ret)
 				{
 					break;

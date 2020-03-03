@@ -2543,14 +2543,14 @@ namespace NBitcoin.Tests
 			{
 				rfc6979 = new RFC6979NonceFunction(nonce);
 			}
-			public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+			public bool TryGetNonce(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
 			{
 				/* Dummy nonce generator that has a fatal error on the first counter value. */
 				if (counter == 0)
 				{
 					return false;
 				}
-				return rfc6979.TrySign(nonce32, msg32, key32, algo16, counter - 1);
+				return rfc6979.TryGetNonce(nonce32, msg32, key32, algo16, counter - 1);
 			}
 		}
 		class RFC6979TestRetryNonceFunction : INonceFunction
@@ -2561,7 +2561,7 @@ namespace NBitcoin.Tests
 			{
 				rfc6979 = new RFC6979NonceFunction(nonce);
 			}
-			public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+			public bool TryGetNonce(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
 			{
 				/* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
 				if (counter < 3)
@@ -2594,7 +2594,7 @@ namespace NBitcoin.Tests
 				{
 					return false;
 				}
-				return rfc6979.TrySign(nonce32, msg32, key32, algo16, counter - 5);
+				return rfc6979.TryGetNonce(nonce32, msg32, key32, algo16, counter - 5);
 			}
 		}
 
