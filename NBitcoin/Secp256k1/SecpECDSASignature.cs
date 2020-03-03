@@ -9,8 +9,8 @@ namespace NBitcoin.Secp256k1
 {
 	class SecpECDSASignature
 	{
-		readonly Scalar r;
-		readonly Scalar s;
+		internal readonly Scalar r;
+		internal readonly Scalar s;
 
 		/// <summary>
 		/// Create a signature from r and s
@@ -283,7 +283,7 @@ namespace NBitcoin.Secp256k1
 		{
 			if (out64.Length < 64)
 				throw new ArgumentException(paramName: nameof(out64), message: "out64 should be at least 64 bytes");
-			this.r.WriteToSpan(out64);
+			this.r.WriteToSpan(out64.Slice(0, 32));
 			this.s.WriteToSpan(out64.Slice(32));
 		}
 

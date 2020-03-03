@@ -92,7 +92,7 @@ namespace NBitcoin.Secp256k1
 			return true;
 		}
 	}
-	class ECPrivKey : IDisposable
+	partial class ECPrivKey : IDisposable
 	{
 		bool cleared = false;
 		Scalar sec;
@@ -602,6 +602,11 @@ namespace NBitcoin.Secp256k1
 		}
 		public bool TrySignECDSA(ReadOnlySpan<byte> msg32, INonceFunction? nonceFunction, out SecpECDSASignature? signature)
 		{
+			return TrySignECDSA(msg32, nonceFunction, out _, out signature);
+		}
+		public bool TrySignECDSA(ReadOnlySpan<byte> msg32, INonceFunction? nonceFunction, out int recid, out SecpECDSASignature? signature)
+		{
+			recid = 0;
 			signature = null;
 			if (cleared)
 				return false;
@@ -636,7 +641,7 @@ namespace NBitcoin.Secp256k1
 				non = new Scalar(nonce32, out overflow);
 				if (overflow == 0 && !non.IsZero)
 				{
-					if (secp256k1_ecdsa_sig_sign(ctx.ECMultiplicationGeneratorContext, out r, out s, sec, msg, non, out _))
+					if (secp256k1_ecdsa_sig_sign(ctx.ECMultiplicationGeneratorContext, out r, out s, sec, msg, non, out recid))
 					{
 						break;
 					}

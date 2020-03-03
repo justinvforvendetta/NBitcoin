@@ -6,7 +6,7 @@ using System.Text;
 
 namespace NBitcoin.Secp256k1
 {
-	class ECPubKey
+	partial class ECPubKey
 	{
 		readonly GroupElement Q;
 		readonly Context ctx;
@@ -101,7 +101,7 @@ namespace NBitcoin.Secp256k1
 *  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
 *   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
 */
-		private static readonly FieldElement order_as_fe = FieldElement.SECP256K1_FE_CONST(
+		internal static readonly FieldElement order_as_fe = FieldElement.SECP256K1_FE_CONST(
 			0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFFU, 0xFFFFFFFEU,
 			0xBAAEDCE6U, 0xAF48A03BU, 0xBFD25E8CU, 0xD0364141U
 		);
@@ -116,7 +116,7 @@ namespace NBitcoin.Secp256k1
  *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
  *   '14551231950b75fc4402da1722fc9baee'
  */
-		private static readonly FieldElement p_minus_order = FieldElement.SECP256K1_FE_CONST(
+		internal static readonly FieldElement p_minus_order = FieldElement.SECP256K1_FE_CONST(
 			0, 0, 0, 1, 0x45512319U, 0x50B75FC4U, 0x402DA172U, 0x2FC9BAEEU
 		);
 		internal static bool secp256k1_ecdsa_sig_verify(ECMultiplicationContext ctx, in Scalar sigr, in Scalar sigs, in GroupElement pubkey, in Scalar message)
