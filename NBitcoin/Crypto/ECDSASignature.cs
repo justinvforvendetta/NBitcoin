@@ -35,6 +35,15 @@ namespace NBitcoin.Crypto
 			_S = s;
 		}
 
+#if HAS_SPAN
+		internal ECDSASignature(Secp256k1.SecpECDSASignature sig)
+		{
+			// TODO: Internal should use secp version
+			_R = new BigInteger(1, sig.r.ToBytes());
+			_S = new BigInteger(1, sig.s.ToBytes());
+		}
+#endif
+
 		public ECDSASignature(BigInteger[] rs)
 		{
 			_R = rs[0];
@@ -89,8 +98,30 @@ namespace NBitcoin.Crypto
 			seq.AddObject(new DerInteger(S));
 			seq.Close();
 			return bos.ToArray();
-
 		}
+#if HAS_SPAN
+		public void WriteDerToSpan(Span<byte> sigs, out int length)
+		{
+			//TODO: Spanify
+			var bytes = ToDER();
+			bytes.AsSpan().CopyTo(sigs);
+			length = bytes.Length;
+		}
+		internal bool TryToSecpECDSASignature(out Secp256k1.SecpECDSASignature signature)
+		{
+			Span<byte> sigs = stackalloc byte[Secp256k1.SecpECDSASignature.MaxLength];
+			// Secp256k1 does not support highS
+			this.MakeCanonical().WriteDerToSpan(sigs, out var l);
+			sigs = sigs.Slice(0, l);
+			if (Secp256k1.SecpECDSASignature.TryCreateFromDer(sigs, out var secpsig) && secpsig is Secp256k1.SecpECDSASignature)
+			{
+				signature = secpsig;
+				return true;
+			}
+			signature = null;
+			return false;
+		}
+#endif
 		const string InvalidDERSignature = "Invalid DER signature";
 		public static ECDSASignature FromDER(byte[] sig)
 		{

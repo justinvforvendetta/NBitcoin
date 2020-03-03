@@ -76,7 +76,9 @@ namespace NBitcoin.Crypto
 		{
 			if (sig.R.CompareTo(PP) >= 0 || sig.S.CompareTo(Secp256k1.N) >= 0)
 				return false;
-
+#if HAS_SPAN
+			throw new NotImplementedException();
+#else
 			var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkey.ToBytes(), m.ToBytes(false)))).Mod(Secp256k1.N);
 			var q = pubkey.ECKey.GetPublicKeyParameters().Q.Normalize();
 			var P = Secp256k1.Curve.CreatePoint(q.XCoord.ToBigInteger(), q.YCoord.ToBigInteger());
@@ -89,6 +91,7 @@ namespace NBitcoin.Crypto
 				return false;
 
 			return true;
+#endif
 		}
 
 		public static bool BatchVerify(uint256[] m, PubKey[] pubkeys, SchnorrSignature[] sigs, BigInteger[] rnds)
@@ -97,7 +100,9 @@ namespace NBitcoin.Crypto
 				throw new ArgumentException("Invalid array lengths");
 			if (rnds.Any(r => r.CompareTo(BigInteger.Zero) <= 0 || r.CompareTo(Secp256k1.N) >= 0))
 				throw new ArgumentException("Random numbers are out of range");
-
+#if HAS_SPAN
+			throw new NotImplementedException();
+#else
 			var s = BigInteger.Zero;
 			var r1 = Secp256k1.Curve.Infinity;
 			var r2 = Secp256k1.Curve.Infinity;
@@ -123,6 +128,7 @@ namespace NBitcoin.Crypto
 				r2 = r2.Add(P.Multiply(e.Multiply(a)));
 			}
 			return Secp256k1.G.Multiply(s).Equals(r1.Add(r2));
+#endif
 		}
 	}
 }

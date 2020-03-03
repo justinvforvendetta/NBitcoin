@@ -38,6 +38,9 @@ namespace NBitcoin.Crypto
 
 			public uint256 BlindMessage(uint256 message, PubKey rpubkey, PubKey signerPubKey)
 			{
+#if HAS_SPAN
+				throw new System.NotImplementedException();
+#else
 				var P = signerPubKey.ECKey.GetPublicKeyParameters().Q;
 				var R = rpubkey.ECKey.GetPublicKeyParameters().Q;
 
@@ -55,6 +58,7 @@ namespace NBitcoin.Crypto
 				_c = new BigInteger(1, Hashes.SHA256(message.ToBytes(false).Concat(Utils.BigIntegerToBytes(t, 32))));
 				var cp = _c.Subtract(_w).Mod(Secp256k1.N); // this is sent to the signer (blinded message)
 				return new uint256(Utils.BigIntegerToBytes(cp, 32));
+#endif
 			}
 
 			public UnblindedSignature UnblindSignature(uint256 blindSignature)
@@ -93,6 +97,9 @@ namespace NBitcoin.Crypto
 
 			public uint256 Sign(uint256 blindedMessage)
 			{
+#if HAS_SPAN
+				throw new System.NotImplementedException();
+#else
 				// blind signature s = r - bs * d
 				if (blindedMessage == uint256.Zero)
 					throw new System.ArgumentException("Invalid blinded message.", nameof(blindedMessage));
@@ -101,6 +108,7 @@ namespace NBitcoin.Crypto
 				var cp = new BigInteger(1, blindedMessage.ToBytes());
 				var sp = r.Subtract(cp.Multiply(d)).Mod(ECKey.Secp256k1.N);
 				return new uint256(Utils.BigIntegerToBytes(sp, 32));
+#endif
 			}
 
 			public bool VerifyUnblindedSignature(UnblindedSignature signature, uint256 dataHash)
@@ -117,6 +125,9 @@ namespace NBitcoin.Crypto
 
 		public static bool VerifySignature(uint256 message, UnblindedSignature signature, PubKey signerPubKey)
 		{
+#if HAS_SPAN
+			throw new System.NotImplementedException();
+#else
 			var P = signerPubKey.ECKey.GetPublicKeyParameters().Q;
 
 			var sG = Secp256k1.G.Multiply(signature.S);
@@ -125,6 +136,7 @@ namespace NBitcoin.Crypto
 			var t = R.AffineXCoord.ToBigInteger().Mod(Secp256k1.N);
 			var c = new BigInteger(1, Hashes.SHA256(message.ToBytes(false).Concat(Utils.BigIntegerToBytes(t, 32))));
 			return c.Equals(signature.C);
+#endif
 		}
 	}
 }

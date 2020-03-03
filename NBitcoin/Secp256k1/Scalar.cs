@@ -1063,6 +1063,13 @@ namespace NBitcoin.Secp256k1
 		{
 			return $"secp256k1_scalar {varname} = {{ 0x{d0.ToString("X8")}UL, 0x{d1.ToString("X8")}UL, 0x{d2.ToString("X8")}UL, 0x{d3.ToString("X8")}UL, 0x{d4.ToString("X8")}UL, 0x{d5.ToString("X8")}UL, 0x{d6.ToString("X8")}UL, 0x{d7.ToString("X8")}UL }}";
 		}
+
+		public byte[] ToBytes()
+		{
+			Span<byte> tmp = stackalloc byte[32];
+			WriteToSpan(tmp);
+			return tmp.ToArray();
+		}
 	}
 }
 #nullable restore

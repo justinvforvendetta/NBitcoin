@@ -95,7 +95,7 @@ namespace NBitcoin.Secp256k1
 	partial class ECPrivKey : IDisposable
 	{
 		bool cleared = false;
-		Scalar sec;
+		internal Scalar sec;
 		readonly Context ctx;
 
 		public static bool TryCreateFromDer(ReadOnlySpan<byte> privkey, Context ctx, out ECPrivKey? result)
@@ -181,8 +181,7 @@ namespace NBitcoin.Secp256k1
 
 		public ECPubKey CreatePubKey()
 		{
-			if (cleared)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+			AssertNotDiposed();
 			GroupElementJacobian pj;
 			GroupElement p;
 			ctx.ECMultiplicationGeneratorContext.secp256k1_ecmult_gen(out pj, sec);
@@ -193,8 +192,7 @@ namespace NBitcoin.Secp256k1
 
 		public ECPrivKey AddTweak(ReadOnlySpan<byte> tweak)
 		{
-			if (cleared)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+			AssertNotDiposed();
 			if (TryAddTweak(tweak, out var r))
 				return r!;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
@@ -233,8 +231,7 @@ namespace NBitcoin.Secp256k1
 
 		public void WriteDerToSpan(bool compressed, Span<byte> derOutput, out int length)
 		{
-			if (cleared)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+			AssertNotDiposed();
 			ECPubKey pubkey = CreatePubKey();
 			if (compressed)
 			{
@@ -582,6 +579,12 @@ namespace NBitcoin.Secp256k1
 			}
 		}
 
+		public void WriteToSpan(Span<byte> span)
+		{
+			AssertNotDiposed();
+			this.sec.WriteToSpan(span);
+		}
+
 		public SecpECDSASignature SignECDSARFC6979(ReadOnlySpan<byte> msg32)
 		{
 			var ret = TrySignECDSA(msg32, out var sig);
@@ -734,8 +737,7 @@ namespace NBitcoin.Secp256k1
 
 		public ECPrivKey MultTweak(ReadOnlySpan<byte> tweak)
 		{
-			if (cleared)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+			AssertNotDiposed();
 			if (TryMultTweak(tweak, out var r))
 				return r!;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
@@ -784,9 +786,13 @@ namespace NBitcoin.Secp256k1
 		}
 		public ECPrivKey Clone()
 		{
+			AssertNotDiposed();
+			return new ECPrivKey(this.sec, this.ctx, false);
+		}
+		public void AssertNotDiposed()
+		{
 			if (this.cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
-			return new ECPrivKey(this.sec, this.ctx, false);
 		}
 	}
 }

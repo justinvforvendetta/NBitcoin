@@ -238,30 +238,30 @@ namespace NBitcoin.Tests
 
 				for (int i = 0; i < 30; i++)
 				{
-					Assert.True(VerifySig(pubkey1, hashMsg, sign1));
-					Assert.True(VerifySig(pubkey2, hashMsg, sign2));
-					Assert.True(VerifySig(pubkey1C, hashMsg, sign1C));
-					Assert.True(VerifySig(pubkey2C, hashMsg, sign2C));
+					Assert.True(pubkey1.Verify(hashMsg, sign1));
+					Assert.True(pubkey2.Verify(hashMsg, sign2));
+					Assert.True(pubkey1C.Verify(hashMsg, sign1C));
+					Assert.True(pubkey2C.Verify(hashMsg, sign2C));
 
-					Assert.True(VerifySig(pubkey1, hashMsg, sign1));
-					Assert.True(!VerifySig(pubkey1, hashMsg, sign2));
-					Assert.True(VerifySig(pubkey1, hashMsg, sign1C));
-					Assert.True(!VerifySig(pubkey1, hashMsg, sign2C));
+					Assert.True(pubkey1.Verify(hashMsg, sign1));
+					Assert.True(!pubkey1.Verify(hashMsg, sign2));
+					Assert.True(pubkey1.Verify(hashMsg, sign1C));
+					Assert.True(!pubkey1.Verify(hashMsg, sign2C));
 
-					Assert.True(!VerifySig(pubkey2, hashMsg, sign1));
-					Assert.True(VerifySig(pubkey2, hashMsg, sign2));
-					Assert.True(!VerifySig(pubkey2, hashMsg, sign1C));
-					Assert.True(VerifySig(pubkey2, hashMsg, sign2C));
+					Assert.True(!pubkey2.Verify(hashMsg, sign1));
+					Assert.True(pubkey2.Verify(hashMsg, sign2));
+					Assert.True(!pubkey2.Verify(hashMsg, sign1C));
+					Assert.True(pubkey2.Verify(hashMsg, sign2C));
 
-					Assert.True(VerifySig(pubkey1C, hashMsg, sign1));
-					Assert.True(!VerifySig(pubkey1C, hashMsg, sign2));
-					Assert.True(VerifySig(pubkey1C, hashMsg, sign1C));
-					Assert.True(!VerifySig(pubkey1C, hashMsg, sign2C));
+					Assert.True(pubkey1C.Verify(hashMsg, sign1));
+					Assert.True(!pubkey1C.Verify(hashMsg, sign2));
+					Assert.True(pubkey1C.Verify(hashMsg, sign1C));
+					Assert.True(!pubkey1C.Verify(hashMsg, sign2C));
 
-					Assert.True(!VerifySig(pubkey2C, hashMsg, sign1));
-					Assert.True(VerifySig(pubkey2C, hashMsg, sign2));
-					Assert.True(!VerifySig(pubkey2C, hashMsg, sign1C));
-					Assert.True(VerifySig(pubkey2C, hashMsg, sign2C));
+					Assert.True(!pubkey2C.Verify(hashMsg, sign1));
+					Assert.True(pubkey2C.Verify(hashMsg, sign2));
+					Assert.True(!pubkey2C.Verify(hashMsg, sign1C));
+					Assert.True(pubkey2C.Verify(hashMsg, sign2C));
 				}
 				// compact signatures (with key recovery)
 
@@ -288,16 +288,6 @@ namespace NBitcoin.Tests
 				Assert.True(sign1C.IsLowR && sign1C.ToDER().Length <= 70);
 				Assert.True(sign2C.IsLowR && sign2C.ToDER().Length <= 70);
 			}
-		}
-
-		private bool VerifySig(PubKey pubkey, uint256 h, ECDSASignature sig)
-		{
-			var ok1 = pubkey.Verify(h, sig);
-			Assert.True(Secp256k1.SecpECDSASignature.TryCreateFromDer(sig.ToDER(), out var secpSig));
-			Assert.True(Secp256k1.Context.Instance.TryCreatePubKey(pubkey.ToBytes(), out var secppubkey));
-			var ok2 = secppubkey.SigVerify(secpSig, h.ToBytes());
-			Assert.Equal(ok1, ok2);
-			return ok1;
 		}
 
 		[Fact]

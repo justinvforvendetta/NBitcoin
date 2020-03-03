@@ -57,6 +57,13 @@ namespace NBitcoin.Crypto
 		{
 			return Hash160(data, 0, data.Length);
 		}
+#if HAS_SPAN
+		public static uint160 Hash160(ReadOnlySpan<byte> data)
+		{
+			// TODO: optimize
+			return Hash160(data.ToArray());
+		}
+#endif
 
 		public static uint160 Hash160(byte[] data, int count)
 		{
@@ -786,6 +793,22 @@ namespace NBitcoin.Crypto
 		public static byte[] HMACSHA256(byte[] key, byte[] data)
 		{
 			return new HMACSHA256(key).ComputeHash(data);
+		}
+#endif
+#if HAS_SPAN
+		public static void BIP32Hash(byte[] chainCode, uint nChild, byte header, Span<byte> data, Span<byte> output)
+		{
+			Span<byte> d = stackalloc byte[1 + data.Length + 4];
+			d[0] = header;
+			data.CopyTo(d.Slice(1));
+			var noffset = 1 + data.Length;
+			d[noffset] = (byte)((nChild >> 24) & 0xFF);
+			d[noffset + 1] = (byte)((nChild >> 16) & 0xFF);
+			d[noffset + 2] = (byte)((nChild >> 8) & 0xFF);
+			d[noffset + 3] = (byte)((nChild >> 0) & 0xFF);
+			using var hmac = new HMACSHA512(chainCode);
+			if (!hmac.TryComputeHash(d, output, out var l) && l != 64)
+				throw new InvalidOperationException("Could not compute BIP32 HMACSHA512");
 		}
 #endif
 		public static byte[] BIP32Hash(byte[] chainCode, uint nChild, byte header, byte[] data)
