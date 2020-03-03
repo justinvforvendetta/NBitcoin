@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace NBitcoin.Secp256k1
@@ -9,14 +10,35 @@ namespace NBitcoin.Secp256k1
 		readonly Scalar r;
 		readonly Scalar s;
 
-		public SecpECDSASignature(in Scalar r, in Scalar s)
+		/// <summary>
+		/// Create a signature from r and s
+		/// </summary>
+		/// <param name="r"></param>
+		/// <param name="s"></param>
+		/// <param name="enforceCheck">If true, will check that r and s are not zero or overflow. If false, we assume the caller made the checks</param>
+		/// <exception cref="System.ArgumentException">Thrown if enforceCheck is true and r or s is not valid</exception>
+		public SecpECDSASignature(in Scalar r, in Scalar s, bool enforceCheck)
 		{
-			if (r.IsZeroVariable)
-				throw new ArgumentException(paramName: nameof(r), message: "r should not be 0");
-			if (s.IsZeroVariable)
-				throw new ArgumentException(paramName: nameof(s), message: "s should not be 0");
+			if (enforceCheck)
+			{
+				if (r.IsOverflow)
+					throw new ArgumentException(paramName: nameof(r), message: "r should not be overflow");
+				if (s.IsOverflow)
+					throw new ArgumentException(paramName: nameof(s), message: "s should not be overflow");
+			}
+			else
+			{
+				VERIFY_CHECK(!r.IsOverflow && !s.IsOverflow);
+			}
 			this.r = r;
 			this.s = s;
+		}
+
+		[Conditional("SECP256K1_VERIFY")]
+		private static void VERIFY_CHECK(bool value)
+		{
+			if (!value)
+				throw new InvalidOperationException("VERIFY_CHECK failed (bug in C# secp256k1)");
 		}
 
 		public bool TryNormalize(out SecpECDSASignature normalized)
@@ -27,7 +49,7 @@ namespace NBitcoin.Secp256k1
 			{
 				s = s.Negate();
 			}
-			normalized = new SecpECDSASignature(r, s);
+			normalized = new SecpECDSASignature(r, s, false);
 			return ret;
 		}
 
@@ -190,7 +212,7 @@ namespace NBitcoin.Secp256k1
 				/* Trailing garbage inside tuple. */
 				return false;
 			}
-			output = new SecpECDSASignature(rr, rs);
+			output = new SecpECDSASignature(rr, rs, false);
 			return true;
 		}
 		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, out SecpECDSASignature output)
@@ -208,7 +230,7 @@ namespace NBitcoin.Secp256k1
 			ret &= overflow == 0;
 			if (ret)
 			{
-				output = new SecpECDSASignature(r, s);
+				output = new SecpECDSASignature(r, s, false);
 			}
 			else
 			{

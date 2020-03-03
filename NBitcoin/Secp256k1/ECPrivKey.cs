@@ -92,6 +92,7 @@ namespace NBitcoin.Secp256k1
 	}
 	class ECPrivKey : IDisposable
 	{
+		bool cleared = false;
 		Scalar sec;
 		readonly Context ctx;
 
@@ -143,19 +144,26 @@ namespace NBitcoin.Secp256k1
 			}
 			privkey.Slice(2, privkey[1]).CopyTo(out32.Slice(32 - privkey[1]));
 			var s = new Scalar(out32, out int overflow);
-			if (s.IsZero || overflow == 1)
+			if (overflow == 1 || s.IsZero)
 			{
 				out32.Fill(0);
 				result = null;
 				return false;
 			}
-			result = new ECPrivKey(s, ctx);
+			result = new ECPrivKey(s, ctx, false);
 			return true;
 		}
-		public ECPrivKey(in Scalar scalar, Context ctx)
+		public ECPrivKey(in Scalar scalar, Context ctx, bool enforceCheck)
 		{
-			if (scalar.IsZeroVariable || scalar.IsOverflow)
-				throw new ArgumentException(paramName: nameof(scalar), message: "Invalid privkey");
+			if (enforceCheck)
+			{
+				if (scalar.IsZero || scalar.IsOverflow)
+					throw new ArgumentException(paramName: nameof(scalar), message: "Invalid privkey");
+			}
+			else
+			{
+				VERIFY_CHECK(!scalar.IsZero && !scalar.IsOverflow);
+			}
 			sec = scalar;
 			this.ctx = ctx ?? Context.Instance;
 		}
@@ -164,14 +172,14 @@ namespace NBitcoin.Secp256k1
 			if (b32.Length != 32)
 				throw new ArgumentException(paramName: nameof(b32), message: "b32 should be of length 32");
 			sec = new Scalar(b32, out int overflow);
-			if (overflow != 0 || sec.IsZeroVariable)
+			if (overflow != 0 || sec.IsZero)
 				throw new ArgumentException(paramName: nameof(b32), message: "Invalid privkey");
 			this.ctx = ctx ?? Context.Instance;
 		}
 
 		public ECPubKey CreatePubKey()
 		{
-			if (sec.IsZeroVariable)
+			if (cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
 			GroupElementJacobian pj;
 			GroupElement p;
@@ -184,7 +192,7 @@ namespace NBitcoin.Secp256k1
 
 		public ECPrivKey AddTweak(ReadOnlySpan<byte> tweak)
 		{
-			if (sec.IsZeroVariable)
+			if (cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
 			if (TryAddTweak(tweak, out var r))
 				return r;
@@ -193,7 +201,7 @@ namespace NBitcoin.Secp256k1
 		public bool TryAddTweak(ReadOnlySpan<byte> tweak, out ECPrivKey tweakedPrivKey)
 		{
 			tweakedPrivKey = null;
-			if (this.sec.IsZeroVariable)
+			if (this.cleared)
 				return false;
 			tweakedPrivKey = null;
 			if (tweak.Length < 32)
@@ -208,7 +216,7 @@ namespace NBitcoin.Secp256k1
 			ret = overflow == 0 && secp256k1_eckey_privkey_tweak_add(ref sec, term);
 			if (ret)
 			{
-				seckey = new ECPrivKey(sec, ctx);
+				seckey = new ECPrivKey(sec, ctx, false);
 				tweakedPrivKey = seckey;
 			}
 			sec = default;
@@ -224,7 +232,7 @@ namespace NBitcoin.Secp256k1
 
 		public void WriteDerToSpan(bool compressed, Span<byte> derOutput, out int length)
 		{
-			if (sec.IsZeroVariable)
+			if (cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
 			ECPubKey pubkey = CreatePubKey();
 			if (compressed)
@@ -592,7 +600,7 @@ namespace NBitcoin.Secp256k1
 		public bool TrySignECDSA(ReadOnlySpan<byte> msg32, INonceFunction nonceFunction, out SecpECDSASignature signature)
 		{
 			signature = null;
-			if (sec.IsZeroVariable)
+			if (cleared)
 				return false;
 			Scalar r, s;
 			r = default;
@@ -639,7 +647,7 @@ namespace NBitcoin.Secp256k1
 
 			if (ret)
 			{
-				signature = new SecpECDSASignature(r, s);
+				signature = new SecpECDSASignature(r, s, false);
 			}
 			else
 			{
@@ -717,7 +725,7 @@ namespace NBitcoin.Secp256k1
 
 		public ECPrivKey MultTweak(ReadOnlySpan<byte> tweak)
 		{
-			if (sec.IsZeroVariable)
+			if (cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
 			if (TryMultTweak(tweak, out var r))
 				return r;
@@ -727,7 +735,7 @@ namespace NBitcoin.Secp256k1
 		public bool TryMultTweak(ReadOnlySpan<byte> tweak, out ECPrivKey tweakedPrivkey)
 		{
 			tweakedPrivkey = null;
-			if (this.sec.IsZeroVariable)
+			if (cleared)
 				return false;
 			tweakedPrivkey = null;
 			if (tweak.Length < 32)
@@ -740,7 +748,7 @@ namespace NBitcoin.Secp256k1
 			ret = overflow == 0 && secp256k1_eckey_privkey_tweak_mul(ref sec, factor);
 			if (ret)
 			{
-				tweakedPrivkey = new ECPrivKey(sec, ctx);
+				tweakedPrivkey = new ECPrivKey(sec, ctx, false);
 			}
 			sec = default;
 			factor = default;
@@ -763,12 +771,13 @@ namespace NBitcoin.Secp256k1
 		public void Clear()
 		{
 			this.sec = default;
+			this.cleared = true;
 		}
 		public ECPrivKey Clone()
 		{
-			if (this.sec.IsZeroVariable)
+			if (this.cleared)
 				throw new ObjectDisposedException(nameof(ECPrivKey));
-			return new ECPrivKey(this.sec, this.ctx);
+			return new ECPrivKey(this.sec, this.ctx, false);
 		}
 	}
 }

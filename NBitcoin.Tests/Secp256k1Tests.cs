@@ -537,7 +537,7 @@ namespace NBitcoin.Tests
 			Assert.True(!signature[0].TryNormalize(out _));
 			(r, s) = signature[0];
 			s = s.Negate();
-			signature[5] = new SecpECDSASignature(r, s);
+			signature[5] = new SecpECDSASignature(r, s, true);
 			Assert.False(pubkey.SigVerify(signature[5], message));
 			Assert.True(signature[5].TryNormalize(out _));
 			Assert.True(signature[5].TryNormalize(out signature[5]));
@@ -545,7 +545,7 @@ namespace NBitcoin.Tests
 			Assert.False(signature[5].TryNormalize(out signature[5]));
 			Assert.True(pubkey.SigVerify(signature[5], message));
 			s = s.Negate();
-			signature[5] = new SecpECDSASignature(r, s);
+			signature[5] = new SecpECDSASignature(r, s, true);
 			Assert.False(signature[5].TryNormalize(out _));
 			Assert.True(pubkey.SigVerify(signature[5], message));
 			Assert.Equal(signature[5], signature[0]);
@@ -2519,6 +2519,69 @@ namespace NBitcoin.Tests
 			Assert.True(n.IsZero);
 		}
 
+		class RFC6979TestFailNonceFunction : INonceFunction
+		{
+			private readonly RFC6979NonceFunction rfc6979;
+
+			public RFC6979TestFailNonceFunction(byte[] nonce)
+			{
+				rfc6979 = new RFC6979NonceFunction(nonce);
+			}
+			public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+			{
+				/* Dummy nonce generator that has a fatal error on the first counter value. */
+				if (counter == 0)
+				{
+					return false;
+				}
+				return rfc6979.TrySign(nonce32, msg32, key32, algo16, counter - 1);
+			}
+		}
+		class RFC6979TestRetryNonceFunction : INonceFunction
+		{
+			private readonly RFC6979NonceFunction rfc6979;
+
+			public RFC6979TestRetryNonceFunction(byte[] nonce)
+			{
+				rfc6979 = new RFC6979NonceFunction(nonce);
+			}
+			public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+			{
+				/* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
+				if (counter < 3)
+				{
+					nonce32.Fill(counter == 0 ? (byte)0 : (byte)255);
+					if (counter == 2)
+					{
+						nonce32[31]--;
+					}
+					return true;
+				}
+				if (counter < 5)
+				{
+					byte[] order =  new byte[]{
+		   0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+		   0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+		   0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+		   0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x41
+	   };
+					order.AsSpan().CopyTo(nonce32);
+					if (counter == 4)
+					{
+						nonce32[31]++;
+					}
+					return true;
+				}
+				/* Retry rate of 6979 is negligible esp. as we only call this in deterministic tests. */
+				/* If someone does fine a case where it retries for secp256k1, we'd like to know. */
+				if (counter > 5)
+				{
+					return false;
+				}
+				return rfc6979.TrySign(nonce32, msg32, key32, algo16, counter - 5);
+			}
+		}
+
 		/* Tests several edge cases. */
 		[Fact]
 		[Trait("UnitTest", "UnitTest")]
@@ -2694,7 +2757,7 @@ namespace NBitcoin.Tests
 			{
 				ECPubKey pubkey;
 				int siglen;
-				int ecount;
+				//int ecount;
 				byte[] signature = new byte[72];
 				byte[] nonce = new byte[]{
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2792,114 +2855,116 @@ namespace NBitcoin.Tests
 				////secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
 			}
 
-			//	/* Nonce function corner cases. */
-			//	for (t = 0; t < 2; t++)
-			//	{
-			//		byte[] zero = new byte[] { 0x00 };
-			//		int i;
-			//		byte[] key = new byte[32];
-			//		byte[] msg = new byte[32];
-			//		secp256k1_ecdsa_signature sig2;
-			//		Scalar sr[512], ss;
-			//		byte[]*extra;
-			//		extra = t == 0 ? NULL : zero;
-			//		memset(msg, 0, 32);
-			//		msg[31] = 1;
-			//		/* High key results in signature failure. */
-			//		memset(key, 0xFF, 32);
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
-			//		CHECK(is_empty_signature(&sig));
-			//		/* Zero key results in signature failure. */
-			//		memset(key, 0, 32);
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
-			//		CHECK(is_empty_signature(&sig));
-			//		/* Nonce function failure results in signature failure. */
-			//		key[31] = 1;
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_fail, extra) == 0);
-			//		CHECK(is_empty_signature(&sig));
-			//		/* The retry loop successfully makes its way to the first good value. */
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
-			//		CHECK(!is_empty_signature(&sig));
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
-			//		CHECK(!is_empty_signature(&sig2));
-			//		CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
-			//		/* The default nonce function is deterministic. */
-			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
-			//		CHECK(!is_empty_signature(&sig2));
-			//		CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
-			//		/* The default nonce function changes output with different messages. */
-			//		for (i = 0; i < 256; i++)
-			//		{
-			//			int j;
-			//			msg[0] = i;
-			//			CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
-			//			CHECK(!is_empty_signature(&sig2));
-			//			secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
-			//			for (j = 0; j < i; j++)
-			//			{
-			//				CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
-			//			}
-			//		}
-			//		msg[0] = 0;
-			//		msg[31] = 2;
-			//		/* The default nonce function changes output with different keys. */
-			//		for (i = 256; i < 512; i++)
-			//		{
-			//			int j;
-			//			key[0] = i - 256;
-			//			CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
-			//			CHECK(!is_empty_signature(&sig2));
-			//			secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
-			//			for (j = 0; j < i; j++)
-			//			{
-			//				CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
-			//			}
-			//		}
-			//		key[0] = 0;
-			//	}
+			/* Nonce function corner cases. */
+			for (t = 0; t < 2; t++)
+			{
+				byte[] zero = new byte[] { 0x00 };
+				int i;
+				byte[] key = new byte[32];
+				byte[] msg = new byte[32];
+				SecpECDSASignature sig2;
+				Span<Scalar> sr = stackalloc Scalar[512];
+				Scalar ss;
+				byte[] extra;
+				extra = t == 0 ? null : zero;
+				msg.AsSpan().Fill(0);
+				msg[31] = 1;
+				/* High key results in signature failure. */
+				key.AsSpan().Fill(0xff);
+				// With NBitcoin, we can't even create an incorrect ECPrivKey
+				Assert.False(ctx.TryCreateECPrivKey(key, out _));
+				//CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+				//CHECK(is_empty_signature(&sig));
+				/* Zero key results in signature failure. */
+				key.AsSpan().Fill(0);
+				// With NBitcoin, we can't even create an incorrect ECPrivKey
+				Assert.False(ctx.TryCreateECPrivKey(key, out _));
+				//CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+				//CHECK(is_empty_signature(&sig));
+				/* Nonce function failure results in signature failure. */
+				key[31] = 1;
+				var keyo = ctx.CreateECPrivKey(key);
+				Assert.False(keyo.TrySignECDSA(msg, new RFC6979TestFailNonceFunction(extra), out sig));
+				Assert.Null(sig);
+				/* The retry loop successfully makes its way to the first good value. */
+				Assert.True(keyo.TrySignECDSA(msg, new RFC6979TestRetryNonceFunction(extra), out sig));
+				Assert.NotNull(sig);
+				Assert.True(keyo.TrySignECDSA(msg, new RFC6979NonceFunction(extra), out sig2));
+				Assert.NotNull(sig2);
+				Assert.Equal(sig, sig2);
+				/* The default nonce function is deterministic. */
+				Assert.True(keyo.TrySignECDSA(msg, new RFC6979NonceFunction(extra), out sig2));
+				Assert.NotNull(sig2);
+				Assert.Equal(sig, sig2);
+				/* The default nonce function changes output with different messages. */
+				for (i = 0; i < 256; i++)
+				{
+					int j;
+					msg[0] = (byte)i;
+					Assert.True(keyo.TrySignECDSA(msg, new RFC6979NonceFunction(extra), out sig2));
+					Assert.NotNull(sig2);
+					(sr[i], ss) = sig2;
+					for (j = 0; j < i; j++)
+					{
+						Assert.NotEqual(sr[i], sr[j]);
+					}
+				}
+				msg[0] = 0;
+				msg[31] = 2;
+				/* The default nonce function changes output with different keys. */
+				for (i = 256; i < 512; i++)
+				{
+					int j;
+					key[0] = (byte)(i - 256);
+					keyo = ctx.CreateECPrivKey(key);
+					Assert.True(keyo.TrySignECDSA(msg, new RFC6979NonceFunction(extra), out sig2));
+					Assert.NotNull(sig2);
+					(sr[i], ss) = sig2;
+					for (j = 0; j < i; j++)
+					{
+						Assert.NotEqual(sr[i], sr[j]);
+					}
+				}
+				key[0] = 0;
+			}
 
-			//	{
-			//		/* Check that optional nonce arguments do not have equivalent effect. */
-			//		byte[] zeros = new byte[] { 0 };
-			//		byte[] nonce = new byte[32];
-			//		byte[] nonce2 = new byte[32];
-			//		byte[] nonce3 = new byte[32];
-			//		byte[] nonce4 = new byte[32];
-			//		VG_UNDEF(nonce, 32);
-			//		VG_UNDEF(nonce2, 32);
-			//		VG_UNDEF(nonce3, 32);
-			//		VG_UNDEF(nonce4, 32);
-			//		CHECK(nonce_function_rfc6979(nonce, zeros, zeros, NULL, NULL, 0) == 1);
-			//		VG_CHECK(nonce, 32);
-			//		CHECK(nonce_function_rfc6979(nonce2, zeros, zeros, zeros, NULL, 0) == 1);
-			//		VG_CHECK(nonce2, 32);
-			//		CHECK(nonce_function_rfc6979(nonce3, zeros, zeros, NULL, (void*)zeros, 0) == 1);
-			//		VG_CHECK(nonce3, 32);
-			//		CHECK(nonce_function_rfc6979(nonce4, zeros, zeros, zeros, (void*)zeros, 0) == 1);
-			//		VG_CHECK(nonce4, 32);
-			//		CHECK(memcmp(nonce, nonce2, 32) != 0);
-			//		CHECK(memcmp(nonce, nonce3, 32) != 0);
-			//		CHECK(memcmp(nonce, nonce4, 32) != 0);
-			//		CHECK(memcmp(nonce2, nonce3, 32) != 0);
-			//		CHECK(memcmp(nonce2, nonce4, 32) != 0);
-			//		CHECK(memcmp(nonce3, nonce4, 32) != 0);
-			//	}
+			//{
+			//	/* Check that optional nonce arguments do not have equivalent effect. */
+			//	byte[] zeros = new byte[] { 0 };
+			//	byte[] nonce =  new byte[32];
+			//	byte[] nonce2 = new byte[32];
+			//	byte[] nonce3 = new byte[32];
+			//	byte[] nonce4 = new byte[32];
+
+			//	Assert.True(new RFC6979NonceFunction().TrySign(nonce, zeros, zeros, new ReadOnlySpan<byte>(), 0));
+			//	Assert.True(new RFC6979NonceFunction().TrySign(nonce2, zeros, zeros, zeros, 0));
+			//	Assert.True(new RFC6979NonceFunction(zeros).TrySign(nonce3, zeros, zeros, new ReadOnlySpan<byte>(), 0));
+			//	Assert.True(new RFC6979NonceFunction(zeros).TrySign(nonce4, zeros, zeros, zeros, 0));
+				
+			//	Assert.False(Utils.ArrayEqual(nonce, nonce2));
+			//	Assert.False(Utils.ArrayEqual(nonce, nonce3));
+			//	Assert.False(Utils.ArrayEqual(nonce, nonce4));
+			//	Assert.False(Utils.ArrayEqual(nonce2, nonce3));
+			//	Assert.False(Utils.ArrayEqual(nonce2, nonce4));
+			//	Assert.False(Utils.ArrayEqual(nonce3, nonce4));
+			//}
 
 
-			//	/* Privkey export where pubkey is the point at infinity. */
-			//	{
-			//		byte[] privkey = new byte[300];
-			//		byte[] seckey = {
-			//	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-			//	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
-			//	0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
-			//	0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
-			//};
-			//		int outlen = 300;
-			//		CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 0));
-			//		outlen = 300;
-			//		CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 1));
-			//	}
+			/* Privkey export where pubkey is the point at infinity. */
+			{
+				byte[] privkey = new byte[300];
+				//var seckey =
+				Assert.False(ctx.TryCreateECPrivKey(new byte[]{
+				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+				0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+				0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41 }, out _));
+				// Can't test, CreateECPrivKey enforce invariant
+				//int outlen = 300;
+				//CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 0));
+				//outlen = 300;
+				//CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 1));
+			}
 		}
 
 		private Scalar random_scalar_order()
