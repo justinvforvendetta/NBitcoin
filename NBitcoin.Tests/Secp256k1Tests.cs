@@ -2519,6 +2519,389 @@ namespace NBitcoin.Tests
 			Assert.True(n.IsZero);
 		}
 
+		/* Tests several edge cases. */
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
+		public void test_ecdsa_edge_cases()
+		{
+			Context ctx = Context.Instance;
+			int t;
+			SecpECDSASignature sig;
+
+			/* Test the case where ECDSA recomputes a point that is infinity. */
+			{
+				GroupElementJacobian keyj;
+				GroupElement key;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(1);
+				ss = ss.Negate();
+				ss = ss.Inverse();
+				sr = new Scalar(1);
+				ctx.ECMultiplicationGeneratorContext.secp256k1_ecmult_gen(out keyj, sr);
+				key = keyj.ToGroupElement();
+				msg = ss;
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+			}
+
+			/* Verify signature with r of zero fails. */
+			{
+				byte[] pubkey_mods_zero = new byte[] {
+			0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xfe, 0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0,
+			0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41,
+			0x41
+		};
+				GroupElement key;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(1);
+				msg = new Scalar(0);
+				sr = new Scalar(0);
+				Assert.True(EC.Pubkey_parse(pubkey_mods_zero, out key));
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+			}
+
+			/* Verify signature with s of zero fails. */
+			{
+				byte[] pubkey = new byte[] {
+			0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x01
+		};
+				GroupElement key;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(0);
+				msg = new Scalar(0);
+				sr = new Scalar(1);
+				Assert.True(EC.Pubkey_parse(pubkey, out key));
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+			}
+
+			/* Verify signature with message 0 passes. */
+			{
+				byte[] pubkey = new byte[] {
+			0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x02
+		};
+				byte[] pubkey2 = new byte[] {
+			0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			0xfe, 0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0,
+			0x3b, 0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41,
+			0x43
+		};
+				GroupElement key;
+				GroupElement key2;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(2);
+				msg = new Scalar(0);
+				sr = new Scalar(2);
+				Assert.True(EC.Pubkey_parse(pubkey, out key));
+				Assert.True(EC.Pubkey_parse(pubkey2, out key2));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+				ss = ss.Negate();
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+				ss = new Scalar(1);
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+			}
+
+			/* Verify signature with message 1 passes. */
+			{
+				byte[] pubkey = new byte[] {
+			0x02, 0x14, 0x4e, 0x5a, 0x58, 0xef, 0x5b, 0x22,
+			0x6f, 0xd2, 0xe2, 0x07, 0x6a, 0x77, 0xcf, 0x05,
+			0xb4, 0x1d, 0xe7, 0x4a, 0x30, 0x98, 0x27, 0x8c,
+			0x93, 0xe6, 0xe6, 0x3c, 0x0b, 0xc4, 0x73, 0x76,
+			0x25
+		};
+				byte[] pubkey2 = new byte[] {
+			0x02, 0x8a, 0xd5, 0x37, 0xed, 0x73, 0xd9, 0x40,
+			0x1d, 0xa0, 0x33, 0xd2, 0xdc, 0xf0, 0xaf, 0xae,
+			0x34, 0xcf, 0x5f, 0x96, 0x4c, 0x73, 0x28, 0x0f,
+			0x92, 0xc0, 0xf6, 0x9d, 0xd9, 0xb2, 0x09, 0x10,
+			0x62
+		};
+				byte[] csr = new byte[]{
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+			0x45, 0x51, 0x23, 0x19, 0x50, 0xb7, 0x5f, 0xc4,
+			0x40, 0x2d, 0xa1, 0x72, 0x2f, 0xc9, 0xba, 0xeb
+		};
+				GroupElement key;
+				GroupElement key2;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(1);
+				msg = new Scalar(1);
+				sr = new Scalar(csr, out _);
+				Assert.True(EC.Pubkey_parse(pubkey, out key));
+				Assert.True(EC.Pubkey_parse(pubkey2, out key2));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+				ss = ss.Negate();
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+				ss = new Scalar(2);
+				ss = ss.InverseVariable();
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key2, msg));
+			}
+
+			/* Verify signature with message -1 passes. */
+			{
+				byte[] pubkey = {
+			0x03, 0xaf, 0x97, 0xff, 0x7d, 0x3a, 0xf6, 0xa0,
+			0x02, 0x94, 0xbd, 0x9f, 0x4b, 0x2e, 0xd7, 0x52,
+			0x28, 0xdb, 0x49, 0x2a, 0x65, 0xcb, 0x1e, 0x27,
+			0x57, 0x9c, 0xba, 0x74, 0x20, 0xd5, 0x1d, 0x20,
+			0xf1
+		};
+				byte[] csr = {
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+			0x45, 0x51, 0x23, 0x19, 0x50, 0xb7, 0x5f, 0xc4,
+			0x40, 0x2d, 0xa1, 0x72, 0x2f, 0xc9, 0xba, 0xee
+		};
+				GroupElement key;
+				Scalar msg;
+				Scalar sr, ss;
+				ss = new Scalar(1);
+				msg = new Scalar(1);
+				msg = msg.Negate();
+				sr = new Scalar(csr, out _);
+				Assert.True(EC.Pubkey_parse(pubkey, out key));
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				ss = ss.Negate();
+				Assert.True(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+				ss = new Scalar(3);
+				ss = ss.InverseVariable();
+				Assert.False(ECPubKey.secp256k1_ecdsa_sig_verify(ctx.ECMultiplicationContext, sr, ss, key, msg));
+			}
+
+			/* Signature where s would be zero. */
+			{
+				ECPubKey pubkey;
+				int siglen;
+				int ecount;
+				byte[] signature = new byte[72];
+				byte[] nonce = new byte[]{
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+		};
+				byte[] nonce2 = new byte[]{
+			0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
+			0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
+			0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
+			0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40
+		};
+				var key = ctx.CreateECPrivKey(new byte[]{
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+		});
+				byte[] msg = new byte[]{
+			0x86, 0x41, 0x99, 0x81, 0x06, 0x23, 0x44, 0x53,
+			0xaa, 0x5f, 0x9d, 0x6a, 0x31, 0x78, 0xf4, 0xf7,
+			0xb8, 0x12, 0xe0, 0x0b, 0x81, 0x7a, 0x77, 0x62,
+			0x65, 0xdf, 0xdd, 0x31, 0xb9, 0x3e, 0x29, 0xa9,
+		};
+				//ecount = 0;
+				//secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
+				Assert.False(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce), out sig));
+				Assert.False(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce2), out sig));
+				msg[31] = 0xaa;
+				Assert.True(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce), out sig));
+				//Assert.True(ecount == 0);
+				//  CHECK(secp256k1_ecdsa_sign(ctx, NULL, msg, key, precomputed_nonce_function, nonce2) == 0);
+				// Assert.False(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce2), out _));
+				//Assert.True(ecount == 1);
+				Assert.False(key.TrySignECDSA(new ReadOnlySpan<byte>(), new PrecomputedNonceFunction(nonce2), out sig));
+				//Assert.True(ecount == 2);
+				var emptykey = key.Clone();
+				emptykey.Clear();
+				Assert.False(emptykey.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce2), out sig));
+				//Assert.True(ecount == 3);
+				Assert.True(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce2), out sig));
+				pubkey = key.CreatePubKey();
+				Assert.False(pubkey.SigVerify(null, msg));
+				// CHECK(ecount == 4);
+				Assert.False(pubkey.SigVerify(sig, new ReadOnlySpan<byte>()));
+				// CHECK(ecount == 5);
+				//Assert.False(NULL.SigVerify(sig, msg));
+				// CHECK(ecount == 6);
+				Assert.True(pubkey.SigVerify(sig, msg));
+				// CHECK(ecount == 6);
+				//pubkey = NULL.CreatePubKey();
+				// CHECK(ecount == 7);
+				/* That pubkeyload fails via an ARGCHECK is a little odd but makes sense because pubkeys are an opaque data type. */
+				//Assert.False(NULL.SigVerify(sig, msg));
+				// CHECK(ecount == 8);
+				siglen = 72;
+				//CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, NULL, &siglen, &sig) == 0);
+				//// CHECK(ecount == 9);
+				//CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, NULL, &sig) == 0);
+				//// CHECK(ecount == 10);
+				//CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, NULL) == 0);
+				//// CHECK(ecount == 11);
+				sig.WriteDerToSpan(signature, out siglen);
+				//// CHECK(ecount == 11);
+				//CHECK(secp256k1_ecdsa_signature_parse_der(ctx, NULL, signature, siglen) == 0);
+				//// CHECK(ecount == 12);
+				//CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, NULL, siglen) == 0);
+				//// CHECK(ecount == 13);
+				Assert.True(Secp256k1.SecpECDSASignature.TryCreateFromDer(signature.AsSpan().Slice(0, siglen), out _));
+				//// CHECK(ecount == 13);
+				siglen = 10;
+				/* Too little room for a signature does not fail via ARGCHECK. */
+				Assert.False(Secp256k1.SecpECDSASignature.TryCreateFromDer(signature.AsSpan().Slice(0, siglen), out _));
+				//// CHECK(ecount == 13);
+				//ecount = 0;
+
+				//Assert.False(NULL.TryNormalize(out NULL));
+				//// CHECK(ecount == 1);
+				//CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, NULL, &sig) == 0);
+				//// CHECK(ecount == 2);
+				//CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, NULL) == 0);
+				//// CHECK(ecount == 3);
+				sig.WriteCompactToSpan(signature);
+				//// CHECK(ecount == 3);
+				//Assert.False(SecpECDSASignature.TryCreateFromCompact(signature, out NULL));
+				//// CHECK(ecount == 4);
+				//CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, NULL) == 0);
+				//// CHECK(ecount == 5);
+				Assert.True(SecpECDSASignature.TryCreateFromCompact(signature, out sig));
+				//// CHECK(ecount == 5);
+				signature.AsSpan().Slice(0, 64).Fill(255);
+				Assert.False(SecpECDSASignature.TryCreateFromCompact(signature, out sig));
+				//// CHECK(ecount == 5);
+				////secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
+			}
+
+			//	/* Nonce function corner cases. */
+			//	for (t = 0; t < 2; t++)
+			//	{
+			//		byte[] zero = new byte[] { 0x00 };
+			//		int i;
+			//		byte[] key = new byte[32];
+			//		byte[] msg = new byte[32];
+			//		secp256k1_ecdsa_signature sig2;
+			//		Scalar sr[512], ss;
+			//		byte[]*extra;
+			//		extra = t == 0 ? NULL : zero;
+			//		memset(msg, 0, 32);
+			//		msg[31] = 1;
+			//		/* High key results in signature failure. */
+			//		memset(key, 0xFF, 32);
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+			//		CHECK(is_empty_signature(&sig));
+			//		/* Zero key results in signature failure. */
+			//		memset(key, 0, 32);
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
+			//		CHECK(is_empty_signature(&sig));
+			//		/* Nonce function failure results in signature failure. */
+			//		key[31] = 1;
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_fail, extra) == 0);
+			//		CHECK(is_empty_signature(&sig));
+			//		/* The retry loop successfully makes its way to the first good value. */
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
+			//		CHECK(!is_empty_signature(&sig));
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
+			//		CHECK(!is_empty_signature(&sig2));
+			//		CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
+			//		/* The default nonce function is deterministic. */
+			//		CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+			//		CHECK(!is_empty_signature(&sig2));
+			//		CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
+			//		/* The default nonce function changes output with different messages. */
+			//		for (i = 0; i < 256; i++)
+			//		{
+			//			int j;
+			//			msg[0] = i;
+			//			CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+			//			CHECK(!is_empty_signature(&sig2));
+			//			secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
+			//			for (j = 0; j < i; j++)
+			//			{
+			//				CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
+			//			}
+			//		}
+			//		msg[0] = 0;
+			//		msg[31] = 2;
+			//		/* The default nonce function changes output with different keys. */
+			//		for (i = 256; i < 512; i++)
+			//		{
+			//			int j;
+			//			key[0] = i - 256;
+			//			CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
+			//			CHECK(!is_empty_signature(&sig2));
+			//			secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
+			//			for (j = 0; j < i; j++)
+			//			{
+			//				CHECK(!secp256k1_scalar_eq(&sr[i], &sr[j]));
+			//			}
+			//		}
+			//		key[0] = 0;
+			//	}
+
+			//	{
+			//		/* Check that optional nonce arguments do not have equivalent effect. */
+			//		byte[] zeros = new byte[] { 0 };
+			//		byte[] nonce = new byte[32];
+			//		byte[] nonce2 = new byte[32];
+			//		byte[] nonce3 = new byte[32];
+			//		byte[] nonce4 = new byte[32];
+			//		VG_UNDEF(nonce, 32);
+			//		VG_UNDEF(nonce2, 32);
+			//		VG_UNDEF(nonce3, 32);
+			//		VG_UNDEF(nonce4, 32);
+			//		CHECK(nonce_function_rfc6979(nonce, zeros, zeros, NULL, NULL, 0) == 1);
+			//		VG_CHECK(nonce, 32);
+			//		CHECK(nonce_function_rfc6979(nonce2, zeros, zeros, zeros, NULL, 0) == 1);
+			//		VG_CHECK(nonce2, 32);
+			//		CHECK(nonce_function_rfc6979(nonce3, zeros, zeros, NULL, (void*)zeros, 0) == 1);
+			//		VG_CHECK(nonce3, 32);
+			//		CHECK(nonce_function_rfc6979(nonce4, zeros, zeros, zeros, (void*)zeros, 0) == 1);
+			//		VG_CHECK(nonce4, 32);
+			//		CHECK(memcmp(nonce, nonce2, 32) != 0);
+			//		CHECK(memcmp(nonce, nonce3, 32) != 0);
+			//		CHECK(memcmp(nonce, nonce4, 32) != 0);
+			//		CHECK(memcmp(nonce2, nonce3, 32) != 0);
+			//		CHECK(memcmp(nonce2, nonce4, 32) != 0);
+			//		CHECK(memcmp(nonce3, nonce4, 32) != 0);
+			//	}
+
+
+			//	/* Privkey export where pubkey is the point at infinity. */
+			//	{
+			//		byte[] privkey = new byte[300];
+			//		byte[] seckey = {
+			//	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+			//	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+			//	0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+			//	0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
+			//};
+			//		int outlen = 300;
+			//		CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 0));
+			//		outlen = 300;
+			//		CHECK(!ec_privkey_export_der(ctx, privkey, &outlen, seckey, 1));
+			//	}
+		}
+
 		private Scalar random_scalar_order()
 		{
 			Scalar num;

@@ -76,6 +76,7 @@ namespace NBitcoin.Secp256k1
 			this.d5 = d[5];
 			this.d6 = d[6];
 			this.d7 = d[7];
+			VERIFY_CHECK(CheckOverflow() == 0);
 		}
 		internal Scalar(uint value)
 		{
@@ -84,11 +85,6 @@ namespace NBitcoin.Secp256k1
 		}
 		internal Scalar(ReadOnlySpan<byte> b32) : this(b32, out _)
 		{
-		}
-
-		public static bool IsValid(in Scalar s)
-		{
-			return !s.IsZero && !s.IsOverflow;
 		}
 		internal Scalar(ReadOnlySpan<byte> b32, out int overflow)
 		{
@@ -120,6 +116,7 @@ namespace NBitcoin.Secp256k1
 			d6 = (uint)t; t >>= 32;
 			t += (ulong)d7;
 			d7 = (uint)t;
+			VERIFY_CHECK(CheckOverflow() == 0);
 		}
 
 		internal readonly Scalar CAddBit(uint bit, int flag)

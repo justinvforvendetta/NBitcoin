@@ -11,6 +11,10 @@ namespace NBitcoin.Secp256k1
 
 		public SecpECDSASignature(in Scalar r, in Scalar s)
 		{
+			if (r.IsZeroVariable)
+				throw new ArgumentException(paramName: nameof(r), message: "r should not be 0");
+			if (s.IsZeroVariable)
+				throw new ArgumentException(paramName: nameof(s), message: "s should not be 0");
 			this.r = r;
 			this.s = s;
 		}
@@ -189,6 +193,29 @@ namespace NBitcoin.Secp256k1
 			output = new SecpECDSASignature(rr, rs);
 			return true;
 		}
+		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, out SecpECDSASignature output)
+		{
+			output = null;
+			if (in64.Length < 64)
+				return false;
+			Scalar r, s;
+			bool ret = true;
+			int overflow = 0;
+
+			r = new Scalar(in64, out overflow);
+			ret &= overflow == 0;
+			s = new Scalar(in64.Slice(32), out overflow);
+			ret &= overflow == 0;
+			if (ret)
+			{
+				output = new SecpECDSASignature(r, s);
+			}
+			else
+			{
+				output = null;
+			}
+			return ret;
+		}
 
 		public bool WriteDerToSpan(Span<byte> sig, out int size)
 		{
@@ -219,6 +246,14 @@ namespace NBitcoin.Secp256k1
 			sig[5 + lenR] = (byte)lenS;
 			sp.Slice(0, lenS).CopyTo(sig.Slice(lenR + 6));
 			return true;
+		}
+
+		public void WriteCompactToSpan(Span<byte> out64)
+		{
+			if (out64.Length < 64)
+				throw new ArgumentException(paramName: nameof(out64), message: "out64 should be at least 64 bytes");
+			this.r.WriteToSpan(out64);
+			this.s.WriteToSpan(out64.Slice(32));
 		}
 
 		public override bool Equals(object obj)

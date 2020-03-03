@@ -26,6 +26,19 @@ namespace NBitcoin.Secp256k1
 	{
 		bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter);
 	}
+	class PrecomputedNonceFunction : INonceFunction
+	{
+		private readonly byte[] nonce;
+		public PrecomputedNonceFunction(byte[] nonce)
+		{
+			this.nonce = nonce;
+		}
+		public bool TrySign(Span<byte> nonce32, ReadOnlySpan<byte> msg32, ReadOnlySpan<byte> key32, ReadOnlySpan<byte> algo16, uint counter)
+		{
+			nonce.AsSpan().Slice(0, 32).CopyTo(nonce32);
+			return counter == 0;
+		}
+	}
 	class RFC6979NonceFunction : INonceFunction
 	{
 		byte[] data = null;
@@ -129,8 +142,8 @@ namespace NBitcoin.Secp256k1
 				return false;
 			}
 			privkey.Slice(2, privkey[1]).CopyTo(out32.Slice(32 - privkey[1]));
-			var s = new Scalar(out32);
-			if (!Scalar.IsValid(s))
+			var s = new Scalar(out32, out int overflow);
+			if (s.IsZero || overflow == 1)
 			{
 				out32.Fill(0);
 				result = null;
@@ -169,16 +182,19 @@ namespace NBitcoin.Secp256k1
 			return pubKey;
 		}
 
-		public ECPrivKey TryAddTweak(ReadOnlySpan<byte> tweak)
+		public ECPrivKey AddTweak(ReadOnlySpan<byte> tweak)
 		{
+			if (sec.IsZeroVariable)
+				throw new ObjectDisposedException(nameof(ECPrivKey));
 			if (TryAddTweak(tweak, out var r))
 				return r;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
 		}
 		public bool TryAddTweak(ReadOnlySpan<byte> tweak, out ECPrivKey tweakedPrivKey)
 		{
+			tweakedPrivKey = null;
 			if (this.sec.IsZeroVariable)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+				return false;
 			tweakedPrivKey = null;
 			if (tweak.Length < 32)
 				return false;
@@ -575,8 +591,9 @@ namespace NBitcoin.Secp256k1
 		}
 		public bool TrySignECDSA(ReadOnlySpan<byte> msg32, INonceFunction nonceFunction, out SecpECDSASignature signature)
 		{
+			signature = null;
 			if (sec.IsZeroVariable)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+				return false;
 			Scalar r, s;
 			r = default;
 			s = default;
@@ -584,7 +601,7 @@ namespace NBitcoin.Secp256k1
 			bool ret = false;
 			int overflow = 0;
 			if (msg32.Length != 32)
-				throw new ArgumentException(paramName: nameof(msg32), message: "msg32 must be 32 bytes");
+				return false;
 			if (nonceFunction == null)
 			{
 				nonceFunction = RFC6979NonceFunction.Instance;
@@ -631,7 +648,7 @@ namespace NBitcoin.Secp256k1
 			return ret;
 		}
 
-		private bool secp256k1_ecdsa_sig_sign(ECMultiplicationGeneratorContext ctx, out Scalar sigr, out Scalar sigs, in Scalar seckey, in Scalar message, in Scalar nonce, out int recid)
+		internal static bool secp256k1_ecdsa_sig_sign(ECMultiplicationGeneratorContext ctx, out Scalar sigr, out Scalar sigs, in Scalar seckey, in Scalar message, in Scalar nonce, out int recid)
 		{
 			Span<byte> b = stackalloc byte[32];
 			GroupElementJacobian rp;
@@ -700,6 +717,8 @@ namespace NBitcoin.Secp256k1
 
 		public ECPrivKey MultTweak(ReadOnlySpan<byte> tweak)
 		{
+			if (sec.IsZeroVariable)
+				throw new ObjectDisposedException(nameof(ECPrivKey));
 			if (TryMultTweak(tweak, out var r))
 				return r;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
@@ -707,8 +726,9 @@ namespace NBitcoin.Secp256k1
 
 		public bool TryMultTweak(ReadOnlySpan<byte> tweak, out ECPrivKey tweakedPrivkey)
 		{
+			tweakedPrivkey = null;
 			if (this.sec.IsZeroVariable)
-				throw new ObjectDisposedException(nameof(ECPrivKey));
+				return false;
 			tweakedPrivkey = null;
 			if (tweak.Length < 32)
 				return false;
@@ -743,6 +763,12 @@ namespace NBitcoin.Secp256k1
 		public void Clear()
 		{
 			this.sec = default;
+		}
+		public ECPrivKey Clone()
+		{
+			if (this.sec.IsZeroVariable)
+				throw new ObjectDisposedException(nameof(ECPrivKey));
+			return new ECPrivKey(this.sec, this.ctx);
 		}
 	}
 }

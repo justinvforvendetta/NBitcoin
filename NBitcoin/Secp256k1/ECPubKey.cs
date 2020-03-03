@@ -75,9 +75,9 @@ namespace NBitcoin.Secp256k1
 		public bool SigVerify(SecpECDSASignature signature, ReadOnlySpan<byte> msg32)
 		{
 			if (msg32.Length != 32)
-				throw new ArgumentException(paramName: nameof(msg32), message: "msg32 should be 32 bytes");
+				return false;
 			if (signature == null)
-				throw new ArgumentNullException(nameof(signature));
+				return false;
 			Scalar m;
 
 			m = new Scalar(msg32);
@@ -117,7 +117,7 @@ namespace NBitcoin.Secp256k1
 		private static readonly FieldElement p_minus_order = FieldElement.SECP256K1_FE_CONST(
 			0, 0, 0, 1, 0x45512319U, 0x50B75FC4U, 0x402DA172U, 0x2FC9BAEEU
 		);
-		static bool secp256k1_ecdsa_sig_verify(ECMultiplicationContext ctx, in Scalar sigr, in Scalar sigs, in GroupElement pubkey, in Scalar message)
+		internal static bool secp256k1_ecdsa_sig_verify(ECMultiplicationContext ctx, in Scalar sigr, in Scalar sigs, in GroupElement pubkey, in Scalar message)
 		{
 			Span<byte> c = stackalloc byte[32];
 			Scalar sn, u1, u2;
