@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -834,7 +836,6 @@ namespace NBitcoin.Secp256k1
 		{
 			ref readonly Scalar x = ref this;
 			Scalar r = Scalar.Zero;
-			int i;
 			/* First compute xN as x ^ (2^N - 1) for some values of N,
 			 * and uM as x ^ M for some values of M. */
 			Scalar x2, x3, x6, x8, x14, x28, x56, x112, x126;
@@ -1059,3 +1060,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
@@ -95,7 +97,7 @@ namespace NBitcoin.Secp256k1
 			Blind();
 		}
 
-		private void Blind(byte[] seed32 = null)
+		private void Blind(byte[]? seed32 = null)
 		{
 			Scalar b;
 			GroupElementJacobian gb;
@@ -113,7 +115,7 @@ namespace NBitcoin.Secp256k1
 			}
 			/* The prior blinding value (if not reset) is chained forward by including it in the hash. */
 			blind.WriteToSpan(nonce32);
-			/** Using a CSPRNG allows a failure free interface, avoids needing large amounts of random data,
+			/* Using a CSPRNG allows a failure free interface, avoids needing large amounts of random data,
 			 *   and guards against weak or adversarial seeds.  This is a simpler and safer interface than
 			 *   asking the caller for blinding values directly and expecting them to retry on failure.
 			 */
@@ -172,7 +174,7 @@ namespace NBitcoin.Secp256k1
 				bits = gnb.GetBits(j * 4, 4);
 				for (i = 0; i < 16; i++)
 				{
-					/** This uses a conditional move to avoid any secret data in array indexes.
+					/* This uses a conditional move to avoid any secret data in array indexes.
 					 *   _Any_ use of secret indexes has been demonstrated to result in timing
 					 *   sidechannels, even when the cache-line access patterns are uniform.
 					 *  See also:
@@ -200,3 +202,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

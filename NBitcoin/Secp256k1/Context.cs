@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,7 +22,7 @@ namespace NBitcoin.Secp256k1
 		{
 			
 		}
-		public Context(ECMultiplicationContext ctx, ECMultiplicationGeneratorContext genCtx)
+		public Context(ECMultiplicationContext? ctx, ECMultiplicationGeneratorContext? genCtx)
 		{
 			ECMultiplicationContext = ctx ?? ECMultiplicationContext.Instance;
 			ECMultiplicationGeneratorContext = genCtx ?? ECMultiplicationGeneratorContext.Instance;
@@ -34,7 +36,7 @@ namespace NBitcoin.Secp256k1
 		{
 			return new ECPrivKey(b32, this);
 		}
-		public bool TryCreateECPrivKey(ReadOnlySpan<byte> b32, out ECPrivKey key)
+		public bool TryCreateECPrivKey(ReadOnlySpan<byte> b32, out ECPrivKey? key)
 		{
 			var s = new Scalar(b32, out var overflow);
 			if (overflow != 0 || s.IsZero)
@@ -46,13 +48,15 @@ namespace NBitcoin.Secp256k1
 			return true;
 		}
 
-		public bool TryCreatePubKey(ReadOnlySpan<byte> input, out ECPubKey pubkey)
+		public bool TryCreatePubKey(ReadOnlySpan<byte> input, out ECPubKey? pubkey)
 		{
 			return ECPubKey.TryCreate(input, this, out pubkey);
 		}
-		public bool TryCreatePrivKeyFromDer(ReadOnlySpan<byte> input, out ECPrivKey privkey)
+		public bool TryCreatePrivKeyFromDer(ReadOnlySpan<byte> input, out ECPrivKey? privkey)
 		{
 			return ECPrivKey.TryCreateFromDer(input, this, out privkey);
 		}
 	}
 }
+#nullable restore
+#endif

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +8,7 @@ namespace NBitcoin.Secp256k1
 {
 	public class HMACSHA256 : IDisposable
 	{
-		Crypto.HashStream inner, outer;
+		Crypto.HashStream? inner, outer;
 		public HMACSHA256()
 		{
 
@@ -48,11 +50,15 @@ namespace NBitcoin.Secp256k1
 
 		public void Write(ReadOnlySpan<byte> data)
 		{
+			if (inner is null)
+				throw new InvalidOperationException("You need to call HMACSHA256.Initialize first");
 			inner.Write(data);
 		}
 
 		public void Finalize(Span<byte> output)
 		{
+			if (inner is null || outer is null)
+				throw new InvalidOperationException("You need to call HMACSHA256.Initialize first");
 			Span<byte> temp = stackalloc byte[32];
 			inner.GetHash(temp);
 			outer.Write(temp);
@@ -67,3 +73,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,8 +8,8 @@ namespace NBitcoin.Secp256k1
 {
 	public class RFC6979HMACSHA256 : IDisposable
 	{
-		byte[] v;
-		byte[] k;
+		byte[]? v;
+		byte[]? k;
 		bool retry;
 
 		public void Initialize(ReadOnlySpan<byte> key)
@@ -87,3 +89,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

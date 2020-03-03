@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -18,9 +20,11 @@ namespace NBitcoin.Secp256k1
 		{
 
 		}
-		public ECDSA(ECMultiplicationContext ctx)
+		public ECDSA(ECMultiplicationContext? ctx)
 		{
 			this.ctx = ctx ?? ECMultiplicationContext.Instance;
 		}
 	}
 }
+#nullable restore
+#endif

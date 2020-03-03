@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -45,7 +47,7 @@ namespace NBitcoin.Secp256k1
 			}
 		}
 
-		public static bool TryCreate(ReadOnlySpan<byte> input, Context ctx, out ECPubKey pubkey)
+		public static bool TryCreate(ReadOnlySpan<byte> input, Context ctx, out ECPubKey? pubkey)
 		{
 			GroupElement Q;
 			pubkey = null;
@@ -55,7 +57,7 @@ namespace NBitcoin.Secp256k1
 			Q = default;
 			return true;
 		}
-		public static bool TryCreateRawFormat(ReadOnlySpan<byte> input, Context ctx, out ECPubKey pubkey)
+		public static bool TryCreateRawFormat(ReadOnlySpan<byte> input, Context ctx, out ECPubKey? pubkey)
 		{
 			if (input.Length != 64)
 			{
@@ -76,7 +78,7 @@ namespace NBitcoin.Secp256k1
 		{
 			if (msg32.Length != 32)
 				return false;
-			if (signature == null)
+			if (signature is null)
 				return false;
 			Scalar m;
 
@@ -185,12 +187,11 @@ namespace NBitcoin.Secp256k1
 
 		public override bool Equals(object obj)
 		{
-			ECPubKey item = obj as ECPubKey;
-			if (item == null)
-				return false;
-			return this == item;
+			if (obj is ECPubKey item)
+				return this == item;
+			return false;
 		}
-		public static bool operator ==(ECPubKey a, ECPubKey b)
+		public static bool operator ==(ECPubKey? a, ECPubKey? b)
 		{
 			if (a is ECPubKey aa && b is ECPubKey bb)
 			{
@@ -200,7 +201,7 @@ namespace NBitcoin.Secp256k1
 			return a is null && b is null;
 		}
 
-		public static bool operator !=(ECPubKey a, ECPubKey b)
+		public static bool operator !=(ECPubKey? a, ECPubKey? b)
 		{
 			return !(a == b);
 		}
@@ -219,10 +220,10 @@ namespace NBitcoin.Secp256k1
 		public ECPubKey AddTweak(ReadOnlySpan<byte> tweak)
 		{
 			if (TryAddTweak(tweak, out var r))
-				return r;
+				return r!;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
 		}
-		public bool TryAddTweak(ReadOnlySpan<byte> tweak, out ECPubKey tweakedPubKey)
+		public bool TryAddTweak(ReadOnlySpan<byte> tweak, out ECPubKey? tweakedPubKey)
 		{
 			tweakedPubKey = null;
 			if (tweak.Length < 32)
@@ -267,10 +268,10 @@ namespace NBitcoin.Secp256k1
 		public ECPubKey MultTweak(ReadOnlySpan<byte> tweak)
 		{
 			if (TryMultTweak(tweak, out var r))
-				return r;
+				return r!;
 			throw new ArgumentException(paramName: nameof(tweak), message: "Invalid tweak");
 		}
-		public bool TryMultTweak(ReadOnlySpan<byte> tweak, out ECPubKey tweakedPubKey)
+		public bool TryMultTweak(ReadOnlySpan<byte> tweak, out ECPubKey? tweakedPubKey)
 		{
 			tweakedPubKey = null;
 			if (tweak.Length < 32)
@@ -324,3 +325,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

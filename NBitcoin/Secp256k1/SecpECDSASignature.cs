@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -181,7 +183,7 @@ namespace NBitcoin.Secp256k1
 			return true;
 		}
 
-		public static bool TryCreateFromDer(ReadOnlySpan<byte> sig, out SecpECDSASignature output)
+		public static bool TryCreateFromDer(ReadOnlySpan<byte> sig, out SecpECDSASignature? output)
 		{
 			int rlen;
 			Scalar rr, rs;
@@ -222,7 +224,7 @@ namespace NBitcoin.Secp256k1
 			output = new SecpECDSASignature(rr, rs, false);
 			return true;
 		}
-		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, out SecpECDSASignature output)
+		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, out SecpECDSASignature? output)
 		{
 			output = null;
 			if (in64.Length < 64)
@@ -287,12 +289,11 @@ namespace NBitcoin.Secp256k1
 
 		public override bool Equals(object obj)
 		{
-			SecpECDSASignature item = obj as SecpECDSASignature;
-			if (item == null)
-				return false;
-			return this == item;
+			if (obj is SecpECDSASignature item)
+				return this == item;
+			return false;
 		}
-		public static bool operator ==(SecpECDSASignature a, SecpECDSASignature b)
+		public static bool operator ==(SecpECDSASignature? a, SecpECDSASignature? b)
 		{
 			if (a is SecpECDSASignature aa && b is SecpECDSASignature bb)
 			{
@@ -301,7 +302,7 @@ namespace NBitcoin.Secp256k1
 			return a is null && b is null;
 		}
 
-		public static bool operator !=(SecpECDSASignature a, SecpECDSASignature b)
+		public static bool operator !=(SecpECDSASignature? a, SecpECDSASignature? b)
 		{
 			return !(a == b);
 		}
@@ -324,3 +325,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif

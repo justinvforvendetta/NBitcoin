@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -192,7 +194,6 @@ namespace NBitcoin.Secp256k1
 			 *  itself always a square (a ** ((p+1)/4) is the square of a ** ((p+1)/8)).
 			 */
 			FieldElement x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
-			int j;
 
 			/* The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
 			 *  { 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
@@ -328,7 +329,6 @@ namespace NBitcoin.Secp256k1
 		public readonly FieldElement Inverse()
 		{
 			FieldElement x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
-			int j;
 			ref readonly FieldElement a = ref this;
 			/* The binary representation of (p - 2) has 5 blocks of 1s, with lengths in
 			 *  { 1, 2, 22, 223 }. Use an addition chain to calculate 2^n - 1 for each block:
@@ -1555,3 +1555,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable restore
+#endif
