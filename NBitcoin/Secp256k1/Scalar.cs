@@ -989,6 +989,11 @@ namespace NBitcoin.Secp256k1
 			return new Scalar(d);
 		}
 
+		public static GroupElementJacobian operator *(in Scalar scalar, in GroupElement groupElement)
+		{
+			return groupElement.ECMultiplyConst(scalar, 256);
+		}
+
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)]
 		public readonly bool Equals(Scalar b)
 		{

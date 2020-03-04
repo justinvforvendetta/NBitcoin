@@ -242,6 +242,11 @@ namespace NBitcoin.Secp256k1
 			return new GroupElementStorage(x, y);
 		}
 
+		public static GroupElementJacobian operator*(in GroupElement groupElement, in Scalar scalar)
+		{
+			return groupElement.ECMultiplyConst(scalar, 256);
+		}
+
 		[MethodImpl(MethodImplOptions.NoOptimization)]
 		public readonly GroupElementJacobian ECMultiplyConst(in Scalar scalar, int size)
 		{
