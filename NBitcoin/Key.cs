@@ -146,6 +146,18 @@ namespace NBitcoin
 			return _ECKey.Sign(hash, true);
 		}
 
+		public SchnorrSignature SignSchnorr(uint256 hash)
+		{
+#if HAS_SPAN
+			Span<byte> h = stackalloc byte[32];
+			hash.ToBytes(h);
+			return new SchnorrSignature(_ECKey.SignSchnorr(h));
+#else
+			var signer = new SchnorrSigner();
+			return signer.Sign(hash, this);
+#endif
+		}
+
 		public string SignMessage(String message)
 		{
 			return SignMessage(Encoding.UTF8.GetBytes(message));

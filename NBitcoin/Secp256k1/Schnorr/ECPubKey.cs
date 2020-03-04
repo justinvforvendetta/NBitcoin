@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
@@ -27,7 +29,6 @@ namespace NBitcoin.Secp256k1
 			sha.TransformBlock(buf, 0, 33, null, 0);
 			msg32.CopyTo(buf);
 			sha.TransformBlock(buf, 0, 32, null, 0);
-			// really?
 			sha.TransformFinalBlock(buf, 0, 0);
 			sha.Hash.AsSpan().CopyTo(buf);
 			e = new Scalar(buf, out _);
@@ -62,3 +63,4 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#endif

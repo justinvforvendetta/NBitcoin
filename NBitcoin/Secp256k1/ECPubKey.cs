@@ -47,6 +47,30 @@ namespace NBitcoin.Secp256k1
 			}
 		}
 
+		public static void Serialize(GroupElement q, bool compressed, Span<byte> output, out int length)
+		{
+			length = 0;
+			var len = (compressed ? 33 : 65);
+			if (output.Length < len)
+				throw new ArgumentException(paramName: nameof(output), message: $"output should be at least {len} bytes");
+
+			var elemx = q.x.NormalizeVariable();
+			var elemy = q.y.NormalizeVariable();
+
+			elemx.WriteToSpan(output.Slice(1));
+			if (compressed)
+			{
+				length = 33;
+				output[0] = elemy.IsOdd ? EC.SECP256K1_TAG_PUBKEY_ODD : EC.SECP256K1_TAG_PUBKEY_EVEN;
+			}
+			else
+			{
+				length = 65;
+				output[0] = EC.SECP256K1_TAG_PUBKEY_UNCOMPRESSED;
+				elemy.WriteToSpan(output.Slice(33));
+			}
+		}
+
 		public static bool TryCreate(ReadOnlySpan<byte> input, Context ctx, out bool compressed, out ECPubKey? pubkey)
 		{
 			GroupElement Q;

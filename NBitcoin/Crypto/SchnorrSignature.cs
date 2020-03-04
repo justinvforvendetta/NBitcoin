@@ -60,7 +60,7 @@ namespace NBitcoin.Crypto
 			S = s;
 		}
 #else
-		SchnorrSignature(SecpSchnorrSignature secpShnorr)
+		internal SchnorrSignature(SecpSchnorrSignature secpShnorr)
 		{
 			this.secpShnorr = secpShnorr;
 		}

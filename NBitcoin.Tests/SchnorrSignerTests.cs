@@ -1,4 +1,3 @@
-#if HAS_SPAN
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,10 +39,10 @@ namespace NBitcoin.Tests
 				var publicKey = new PubKey(Encoders.Hex.DecodeData(vector[2]));
 				var message = Parseuint256(vector[3]);
 				var expectedSignature = SchnorrSignature.Parse(vector[4]);
-#if !HAS_SPAN
-				var signature = signer.Sign(message, privatekey);
+
+				var signature = privatekey.SignSchnorr(message);
 				Assert.Equal(expectedSignature.ToBytes(), signature.ToBytes());
-#endif
+
 				Assert.True(publicKey.Verify(message, expectedSignature));
 				Assert.True(privatekey.PubKey.Verify(message, expectedSignature));
 			}
@@ -99,10 +98,6 @@ namespace NBitcoin.Tests
 				var expectedSignature = SchnorrSignature.Parse(vector[3]);
 				var reason = vector[4];
 
-#if !HAS_SPAN
-				var signature = signer.Sign(message, privatekey);
-				Assert.Equal(expectedSignature.ToBytes(), signature.ToBytes());
-#endif
 				Assert.False(publicKey.Verify(message, expectedSignature), reason);
 			}
 		}
@@ -135,4 +130,3 @@ namespace NBitcoin.Tests
 		}
 	}
 }
-#endif
