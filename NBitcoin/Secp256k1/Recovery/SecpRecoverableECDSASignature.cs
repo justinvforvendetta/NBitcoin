@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -51,3 +53,5 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#nullable disable
+#endif
