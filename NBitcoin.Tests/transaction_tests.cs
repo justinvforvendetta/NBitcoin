@@ -2550,6 +2550,7 @@ namespace NBitcoin.Tests
 			TransactionBuilder builder = Network.CreateTransactionBuilder();
 			builder.StandardTransactionPolicy = EasyPolicy;
 			builder.AddCoins(funding.Outputs.AsCoins());
+			builder.Verify(spending, out var errs);
 			Assert.True(builder.Verify(spending));
 
 			foreach (var input in spending.Inputs.AsIndexedInputs())

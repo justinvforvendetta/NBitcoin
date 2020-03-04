@@ -322,7 +322,7 @@ namespace NBitcoin.Crypto
 		}
 		internal Secp256k1.SecpECDSASignature ToSecpECDSASignature()
 		{
-			return new Secp256k1.SecpECDSASignature(r, s, false);
+			return new Secp256k1.SecpECDSASignature(r, s.IsHigh ? s.Negate() : s, false);
 		}
 #endif
 		const string InvalidDERSignature = "Invalid DER signature";

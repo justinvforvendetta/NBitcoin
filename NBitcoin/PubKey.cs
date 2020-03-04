@@ -448,7 +448,7 @@ namespace NBitcoin
 		}
 		private static ECDSASignature DecodeSig(byte[] signatureEncoded)
 		{
-			if (Secp256k1.SecpECDSASignature.TryCreateFromCompact(signatureEncoded.AsSpan(), out var sig) && sig is Secp256k1.SecpECDSASignature)
+			if (Secp256k1.SecpECDSASignature.TryCreateFromCompact(signatureEncoded.AsSpan().Slice(1), out var sig) && sig is Secp256k1.SecpECDSASignature)
 			{
 				return new ECDSASignature(sig);
 			}
