@@ -225,6 +225,10 @@ namespace NBitcoin.Crypto
 		}
 		public ECDSASignature(BigInteger r, BigInteger s)
 		{
+			if (r == null)
+				throw new ArgumentNullException(paramName: nameof(r));
+			if (s == null)
+				throw new ArgumentNullException(paramName: nameof(s));
 			_R = r;
 			_S = s;
 		}
@@ -279,7 +283,7 @@ namespace NBitcoin.Crypto
 			}
 			catch (Exception ex)
 			{
-				
+				throw new FormatException(InvalidDERSignature, ex);
 			}
 		}
 
