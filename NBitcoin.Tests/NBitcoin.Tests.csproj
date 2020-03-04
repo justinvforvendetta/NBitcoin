@@ -16,14 +16,10 @@
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
 		<DefineConstants>$(DefineConstants);WIN;NOCONSENSUSLIB</DefineConstants>
 	</PropertyGroup>
-	<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' Or '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<DefineConstants>$(DefineConstants);NETCORE;NOTRACESOURCE;NOCUSTOMSSLVALIDATION;NOHTTPSERVER;HAS_SPAN</DefineConstants>
-	</PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' Or '$(TargetFramework)' == 'netcoreapp3.1' ">
     <DefineConstants>$(DefineConstants);NETCORE;NOTRACESOURCE;NOCUSTOMSSLVALIDATION;NOHTTPSERVER</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFrameworkOverride)' == 'netstandard2.0'">$(DefineConstants);HAS_SPAN"</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFrameworkOverride)' != 'netstandard2.0' " >$(DefineConstants);HAS_SPAN</DefineConstants>
   </PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="FsCheck" Version="2.13.0" />
 		<PackageReference Include="FsCheck.Xunit" Version="2.13.0" />
