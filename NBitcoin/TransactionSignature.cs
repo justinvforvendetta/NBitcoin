@@ -6,7 +6,11 @@ namespace NBitcoin
 {
 	public class TransactionSignature
 	{
+#if HAS_SPAN
+		static readonly TransactionSignature _Empty = new TransactionSignature(new ECDSASignature(Secp256k1.Scalar.Zero, Secp256k1.Scalar.Zero), SigHash.All);
+#else
 		static readonly TransactionSignature _Empty = new TransactionSignature(new ECDSASignature(NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0), NBitcoin.BouncyCastle.Math.BigInteger.ValueOf(0)), SigHash.All);
+#endif
 		public static TransactionSignature Empty
 		{
 			get

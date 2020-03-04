@@ -65,7 +65,7 @@ namespace NBitcoin.Crypto
 			}
 		}
 
-
+#if !HAS_SPAN
 		public ECDSASignature Sign(uint256 hash, bool useLowR = true)
 		{
 			AssertPrivateKey();
@@ -74,7 +74,7 @@ namespace NBitcoin.Crypto
 			var sig = ECDSASignature.FromDER(signer.signHash(hash.ToBytes()));
 			return sig.MakeCanonical();
 		}
-
+#endif
 		private void AssertPrivateKey()
 		{
 			if (PrivateKey == null)
@@ -82,14 +82,14 @@ namespace NBitcoin.Crypto
 		}
 
 
-
+#if !HAS_SPAN
 		internal bool Verify(uint256 hash, ECDSASignature sig)
 		{
 			var signer = new ECDsaSigner();
 			signer.Init(false, GetPublicKeyParameters());
 			return signer.VerifySignature(hash.ToBytes(), sig.R, sig.S);
 		}
-
+#endif
 
 		public PubKey GetPubKey(bool isCompressed)
 		{
@@ -113,7 +113,7 @@ namespace NBitcoin.Crypto
 			}
 		}
 
-
+#if !HAS_SPAN
 		public static ECKey RecoverFromSignature(int recId, ECDSASignature sig, uint256 message, bool compressed)
 		{
 			if (recId < 0)
@@ -182,7 +182,7 @@ namespace NBitcoin.Crypto
 			}
 			return new ECKey(q.GetEncoded(), false);
 		}
-
+#endif
 		private static ECPoint DecompressKey(NBitcoin.BouncyCastle.Math.BigInteger xBN, bool yBit)
 		{
 			var curve = ECKey.Secp256k1.Curve;

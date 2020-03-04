@@ -289,9 +289,7 @@ namespace NBitcoin
 #if HAS_SPAN
 			Span<byte> msg = stackalloc byte[32];
 			hash.ToBytes(msg);
-			if (sig.TryToSecpECDSASignature(out var s))
-				return _ECKey.SigVerify(s, msg);
-			return false;
+			return _ECKey.SigVerify(sig.ToSecpECDSASignature(), msg);
 #else
 			return ECKey.Verify(hash, sig);
 #endif
@@ -429,9 +427,7 @@ namespace NBitcoin
 			var hash = Hashes.Hash256(messageToSign);
 			Span<byte> msg = stackalloc byte[32];
 			hash.ToBytes(msg);
-			if (signature.TryToSecpECDSASignature(out var s))
-				return ECKey.SigVerify(s, msg);
-			return false;
+			return _ECKey.SigVerify(signature.ToSecpECDSASignature(), msg);
 #else
 			var messageToSign = Utils.FormatMessageForSigning(message);
 			var hash = Hashes.Hash256(messageToSign);
@@ -439,6 +435,26 @@ namespace NBitcoin
 #endif
 		}
 
+#if HAS_SPAN
+		/// <summary>
+		/// Decode signature from bitcoincore verify/signing rpc methods
+		/// </summary>
+		/// <param name="signature"></param>
+		/// <returns></returns>
+		private static ECDSASignature DecodeSigString(string signature)
+		{
+			var signatureEncoded = Encoders.Base64.DecodeData(signature);
+			return DecodeSig(signatureEncoded);
+		}
+		private static ECDSASignature DecodeSig(byte[] signatureEncoded)
+		{
+			if (Secp256k1.SecpECDSASignature.TryCreateFromCompact(signatureEncoded.AsSpan(), out var sig) && sig is Secp256k1.SecpECDSASignature)
+			{
+				return new ECDSASignature(sig);
+			}
+			return new ECDSASignature(Secp256k1.Scalar.Zero, Secp256k1.Scalar.Zero);
+		}
+#else
 		/// <summary>
 		/// Decode signature from bitcoincore verify/signing rpc methods
 		/// </summary>
@@ -456,7 +472,7 @@ namespace NBitcoin
 			var sig = new ECDSASignature(r, s);
 			return sig;
 		}
-
+#endif
 		//Thanks bitcoinj source code
 		//http://bitcoinj.googlecode.com/git-history/keychain/core/src/main/java/com/google/bitcoin/core/Utils.java
 		public static PubKey RecoverFromMessage(string messageText, string signatureText)

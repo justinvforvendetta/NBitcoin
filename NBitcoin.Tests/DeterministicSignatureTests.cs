@@ -20,6 +20,7 @@ namespace NBitcoin.Tests
 {
 	public class DeterministicSignatureTests
 	{
+#if !HAS_SPAN
 		static DeterministicSignatureTests()
 		{
 			curves = new Dictionary<string, DerObjectIdentifier>();
@@ -250,7 +251,7 @@ namespace NBitcoin.Tests
 
 			return key;
 		}
-
+#endif
 		[Fact]
 		[Trait("UnitTest", "UnitTest")]
 		public void BlindingSignature()
