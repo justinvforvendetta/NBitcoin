@@ -2576,7 +2576,7 @@ namespace NBitcoin.Tests
 				}
 				if (counter < 5)
 				{
-					byte[] order =  new byte[]{
+					byte[] order = new byte[]{
 		   0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
 		   0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,
 		   0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,
@@ -2818,7 +2818,7 @@ namespace NBitcoin.Tests
 				//Assert.True(ecount == 3);
 				Assert.True(key.TrySignECDSA(msg, new PrecomputedNonceFunction(nonce2), out sig));
 				pubkey = key.CreatePubKey();
-				Assert.False(pubkey.SigVerify(null, msg));
+				Assert.False(pubkey.SigVerify(null as SecpECDSASignature, msg));
 				// CHECK(ecount == 4);
 				Assert.False(pubkey.SigVerify(sig, new ReadOnlySpan<byte>()));
 				// CHECK(ecount == 5);
@@ -2957,7 +2957,7 @@ namespace NBitcoin.Tests
 			//	Assert.True(new RFC6979NonceFunction().TrySign(nonce2, zeros, zeros, zeros, 0));
 			//	Assert.True(new RFC6979NonceFunction(zeros).TrySign(nonce3, zeros, zeros, new ReadOnlySpan<byte>(), 0));
 			//	Assert.True(new RFC6979NonceFunction(zeros).TrySign(nonce4, zeros, zeros, zeros, 0));
-				
+
 			//	Assert.False(Utils.ArrayEqual(nonce, nonce2));
 			//	Assert.False(Utils.ArrayEqual(nonce, nonce3));
 			//	Assert.False(Utils.ArrayEqual(nonce, nonce4));
@@ -3200,7 +3200,7 @@ namespace NBitcoin.Tests
 			rsignature[4].WriteToSpanCompact(sig.AsSpan(), out recid);
 			signature[4] = rsignature[4].ToSignature();
 			Assert.Equal(signature[4], signature[0]);
-			
+
 			Assert.True(pubkey.SigVerify(signature[4], message));
 			rsignature[4] = null;
 			Assert.True(SecpRecoverableECDSASignature.TryCreateFromCompact(sig, recid, out rsignature[4]));
@@ -3217,8 +3217,67 @@ namespace NBitcoin.Tests
 			signature[4] = rsignature[4].ToSignature();
 			Assert.False(pubkey.SigVerify(signature[4], message));
 			/* Recover again */
-			Assert.True(!ECPubKey.TryRecover(ctx, rsignature[4] , message, out recpubkey) ||
+			Assert.True(!ECPubKey.TryRecover(ctx, rsignature[4], message, out recpubkey) ||
 				  pubkey != recpubkey);
+		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
+		public void test_schnorrsig_bip_vectors()
+		{
+			{
+				/* Test vector 1 */
+				byte[] sk1 = {
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+		};
+				byte[] pk1 = {
+			0x02, 0x79, 0xBE, 0x66, 0x7E, 0xF9, 0xDC, 0xBB,
+			0xAC, 0x55, 0xA0, 0x62, 0x95, 0xCE, 0x87, 0x0B,
+			0x07, 0x02, 0x9B, 0xFC, 0xDB, 0x2D, 0xCE, 0x28,
+			0xD9, 0x59, 0xF2, 0x81, 0x5B, 0x16, 0xF8, 0x17,
+			0x98
+		};
+				byte[] msg1 = {
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		};
+				byte[] sig1 = {
+			0x78, 0x7A, 0x84, 0x8E, 0x71, 0x04, 0x3D, 0x28,
+			0x0C, 0x50, 0x47, 0x0E, 0x8E, 0x15, 0x32, 0xB2,
+			0xDD, 0x5D, 0x20, 0xEE, 0x91, 0x2A, 0x45, 0xDB,
+			0xDD, 0x2B, 0xD1, 0xDF, 0xBF, 0x18, 0x7E, 0xF6,
+			0x70, 0x31, 0xA9, 0x88, 0x31, 0x85, 0x9D, 0xC3,
+			0x4D, 0xFF, 0xEE, 0xDD, 0xA8, 0x68, 0x31, 0x84,
+			0x2C, 0xCD, 0x00, 0x79, 0xE1, 0xF9, 0x2A, 0xF1,
+			0x77, 0xF7, 0xF2, 0x2C, 0xC1, 0xDC, 0xED, 0x05
+		};
+				test_schnorrsig_bip_vectors_check_verify(pk1, msg1, sig1, true);
+			}
+		}
+
+		void test_schnorrsig_bip_vectors_check_verify(byte[] pk_serialized, byte[] msg32, byte[] sig_serialized, bool expected)
+		{
+			var ctx = Context.Instance;
+			//const unsigned char* msg_arr[1];
+			//const secp256k1_schnorrsig* sig_arr[1];
+			//const secp256k1_pubkey* pk_arr[1];
+			ECPubKey pk;
+			SecpSchnorrSignature sig;
+
+			Assert.True(ctx.TryCreatePubKey(pk_serialized, out pk));
+			Assert.True(SecpSchnorrSignature.TryCreate(sig_serialized, out sig));
+
+			//sig_arr[0] = &sig;
+			//msg_arr[0] = msg32;
+			//pk_arr[0] = &pk;
+
+			Assert.Equal(expected, pk.SigVerify(sig, msg32));
+			//CHECK(expected == secp256k1_schnorrsig_verify_batch(ctx, scratch, sig_arr, msg_arr, pk_arr, 1));
 		}
 
 		/* Tests several edge cases. */
@@ -3370,7 +3429,7 @@ namespace NBitcoin.Tests
 			/* Test r/s equal to zero */
 			{
 				/* (1,1) encoded in DER. */
-				byte[] sigcder= { 0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01 };
+				byte[] sigcder = { 0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x01 };
 				byte[] sigc64 = {
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

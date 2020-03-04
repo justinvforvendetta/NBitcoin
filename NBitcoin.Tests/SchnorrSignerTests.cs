@@ -1,3 +1,5 @@
+#if HAS_SPAN
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin.BouncyCastle.Math;
@@ -36,14 +38,14 @@ namespace NBitcoin.Tests
 			{
 				var privatekey = new Key(Encoders.Hex.DecodeData(vector[1]));
 				var publicKey = new PubKey(Encoders.Hex.DecodeData(vector[2]));
-				var message = uint256.Parse(vector[3]);
+				var message = Parseuint256(vector[3]);
 				var expectedSignature = SchnorrSignature.Parse(vector[4]);
 
-				var signature = signer.Sign(message, privatekey);
-				Assert.Equal(expectedSignature.ToBytes(), signature.ToBytes());
+				//var signature = signer.Sign(message, privatekey);
+				//Assert.Equal(expectedSignature.ToBytes(), signature.ToBytes());
 
-				Assert.True(signer.Verify(message, publicKey, signature));
-				Assert.True(signer.Verify(message, privatekey.PubKey, signature));
+				Assert.True(publicKey.Verify(message, expectedSignature));
+				Assert.True(privatekey.PubKey.Verify(message, expectedSignature));
 			}
 		}
 
@@ -51,11 +53,15 @@ namespace NBitcoin.Tests
 		public void ShouldPassVerifycation()
 		{
 			var publicKey = new PubKey(Encoders.Hex.DecodeData("03DEFDEA4CDB677750A420FEE807EACF21EB9898AE79B9768766E4FAA04A2D4A34"));
-			var message = uint256.Parse("4DF3C3F68FCC83B27E9D42C90431A72499F17875C81A599B566C9889B9696703");
+			var message = Parseuint256("4DF3C3F68FCC83B27E9D42C90431A72499F17875C81A599B566C9889B9696703");
 			var signature = SchnorrSignature.Parse("00000000000000000000003B78CE563F89A0ED9414F5AA28AD0D96D6795F9C6302A8DC32E64E86A333F20EF56EAC9BA30B7246D6D25E22ADB8C6BE1AEB08D49D");
+			Assert.True(publicKey.Verify(message, signature));
+		}
 
-			var signer = new SchnorrSigner();
-			Assert.True(signer.Verify(message, publicKey, signature));
+		private uint256 Parseuint256(string hex)
+		{
+			var message = uint256.Parse(hex);
+			return new uint256(message.ToBytes(false));
 		}
 
 		[Fact]
@@ -90,10 +96,13 @@ namespace NBitcoin.Tests
 			{
 				var publicKey = new PubKey(Encoders.Hex.DecodeData(vector[1]));
 				var message = uint256.Parse(vector[2]);
-				var signature = SchnorrSignature.Parse(vector[3]);
+				var expectedSignature = SchnorrSignature.Parse(vector[3]);
 				var reason = vector[4];
 
-				Assert.False(signer.Verify(message, publicKey, signature), reason);
+				//var signature = signer.Sign(message, privatekey);
+				//Assert.Equal(expectedSignature.ToBytes(), signature.ToBytes());
+
+				Assert.False(publicKey.Verify(message, expectedSignature), reason);
 			}
 		}
 
@@ -125,3 +134,4 @@ namespace NBitcoin.Tests
 		}
 	}
 }
+#endif

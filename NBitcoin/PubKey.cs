@@ -284,8 +284,29 @@ namespace NBitcoin
 			return new HDFingerprint(this.Hash.ToBytes(true), 0);
 		}
 
+
+		public bool Verify(uint256 hash, SchnorrSignature sig)
+		{
+			if (sig == null)
+				throw new ArgumentNullException(nameof(sig));
+			if (hash == null)
+				throw new ArgumentNullException(nameof(hash));
+#if HAS_SPAN
+			Span<byte> msg = stackalloc byte[32];
+			hash.ToBytes(msg);
+			return ECKey.SigVerify(sig.secpShnorr, msg);
+#else
+			SchnorrSigner signer = new SchnorrSigner();
+			return signer.Verify(hash, this, sig);
+#endif
+		}
+
 		public bool Verify(uint256 hash, ECDSASignature sig)
 		{
+			if (sig == null)
+				throw new ArgumentNullException(nameof(sig));
+			if (hash == null)
+				throw new ArgumentNullException(nameof(hash));
 #if HAS_SPAN
 			Span<byte> msg = stackalloc byte[32];
 			hash.ToBytes(msg);
