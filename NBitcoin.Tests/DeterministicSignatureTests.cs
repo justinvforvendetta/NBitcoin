@@ -360,7 +360,8 @@ namespace NBitcoin.Tests
 				rnd.NextBytes(msg);
 
 				var sig = key.Sign(Hashes.Hash256(msg));
-				Assert.True(sig.IsLowR && sig.ToDER().Length <= 70);
+				Assert.True(sig.IsLowR);
+				Assert.True(sig.ToDER().Length <= 70);
 			}
 		}
 	}

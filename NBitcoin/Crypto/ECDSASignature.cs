@@ -154,7 +154,7 @@ namespace NBitcoin.Crypto
 			get
 			{
 				var rBytes = this.R.ToByteArrayUnsigned();
-				return rBytes[0] < 0x80;
+				return rBytes.Length == 31 || rBytes[0] < 0x80;
 			}
 		}
 
