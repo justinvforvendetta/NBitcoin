@@ -159,6 +159,9 @@ namespace NBitcoin
 					);
 			if (!deep || !quick)
 				return quick;
+#if HAS_SPAN
+			return Secp256k1.Context.Instance.TryCreatePubKey(data.AsSpan().Slice(offset, count), out _);
+#else
 			try
 			{
 				new ECKey(data.SafeSubarray(offset, count), false);
@@ -168,6 +171,7 @@ namespace NBitcoin
 			{
 				return false;
 			}
+#endif
 		}
 
 #if HAS_SPAN

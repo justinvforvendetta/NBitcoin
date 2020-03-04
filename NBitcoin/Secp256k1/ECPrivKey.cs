@@ -96,7 +96,7 @@ namespace NBitcoin.Secp256k1
 	{
 		bool cleared = false;
 		internal Scalar sec;
-		readonly Context ctx;
+		internal readonly Context ctx;
 
 		public static bool TryCreateFromDer(ReadOnlySpan<byte> privkey, Context ctx, out ECPrivKey? result)
 		{

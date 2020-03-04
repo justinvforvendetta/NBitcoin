@@ -21,7 +21,9 @@ namespace NBitcoin.Crypto
 
 	public class SchnorrBlinding
 	{
+#if !HAS_SPAN
 		private static X9ECParameters Secp256k1 = ECKey.Secp256k1;
+#endif
 
 		public class Requester
 		{
@@ -63,9 +65,13 @@ namespace NBitcoin.Crypto
 
 			public UnblindedSignature UnblindSignature(uint256 blindSignature)
 			{
+#if HAS_SPAN
+				throw new System.NotFiniteNumberException();
+#else
 				var sp = new BigInteger(1, blindSignature.ToBytes());
 				var s = sp.Add(_v).Mod(Secp256k1.N);
 				return new UnblindedSignature(_c, s);
+#endif
 			}
 
 			public uint256 BlindMessage(byte[] message, PubKey rpubKey, PubKey signerPubKey)
