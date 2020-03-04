@@ -38,13 +38,13 @@ namespace NBitcoin.Secp256k1
 			recid = this.recid;
 		}
 
-		public void WriteToSpanCompact(Span<byte> out32, out int recid)
+		public void WriteToSpanCompact(Span<byte> out64, out int recid)
 		{
-			if (out32.Length < 64)
-				throw new ArgumentException(paramName: nameof(out32), message: "out32 should be 32 bytes");
+			if (out64.Length < 64)
+				throw new ArgumentException(paramName: nameof(out64), message: "out32 should be 64 bytes");
 			recid = this.recid;
-			r.WriteToSpan(out32);
-			s.WriteToSpan(out32.Slice(32));
+			r.WriteToSpan(out64);
+			s.WriteToSpan(out64.Slice(32));
 		}
 
 		public SecpECDSASignature ToSignature()

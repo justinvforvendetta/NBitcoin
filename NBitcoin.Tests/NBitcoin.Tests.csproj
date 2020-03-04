@@ -9,7 +9,7 @@
   <PropertyGroup>
 	  <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
 	  <TargetFrameworks Condition="'$(BuildingInsideVisualStudio)' == 'true'">netcoreapp3.1</TargetFrameworks>
-	  <StartupObject>NBitcoin.Tests.Program</StartupObject>
+	  <!--<StartupObject>NBitcoin.Tests.Program</StartupObject>-->
 	  <!--<TargetFrameworks Condition="'$(BuildingInsideVisualStudio)' == 'true' And '$(MSBuildRuntimeType)' == 'Core' ">netcoreapp2.1</TargetFrameworks>-->
 	  <!--<NoWarn>CS0618</NoWarn>-->
   </PropertyGroup>
