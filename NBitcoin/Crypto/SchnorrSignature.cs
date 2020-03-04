@@ -89,7 +89,7 @@ namespace NBitcoin.Crypto
 #if HAS_SPAN
 			throw new NotImplementedException();
 #else
-			var k = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(secret, 32).Concat(m.ToBytes(false))));
+			var k = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(secret, 32).Concat(m.ToBytes())));
 			var R = Secp256k1.G.Multiply(k).Normalize();
 			var Xr = R.XCoord.ToBigInteger();
 			var Yr = R.YCoord.ToBigInteger();
@@ -97,7 +97,7 @@ namespace NBitcoin.Crypto
 				k = Secp256k1.N.Subtract(k);
 
 			var P = Secp256k1.G.Multiply(secret);
-			var keyPrefixedM = Utils.BigIntegerToBytes(Xr, 32).Concat(P.GetEncoded(true), m.ToBytes(false));
+			var keyPrefixedM = Utils.BigIntegerToBytes(Xr, 32).Concat(P.GetEncoded(true), m.ToBytes());
 			var e = new BigInteger(1, Hashes.SHA256(keyPrefixedM));
 
 			var s = k.Add(e.Multiply(secret)).Mod(Secp256k1.N);
@@ -112,7 +112,7 @@ namespace NBitcoin.Crypto
 #else
 			if (sig.R.CompareTo(PP) >= 0 || sig.S.CompareTo(Secp256k1.N) >= 0)
 				return false;
-			var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkey.ToBytes(), m.ToBytes(false)))).Mod(Secp256k1.N);
+			var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkey.ToBytes(), m.ToBytes()))).Mod(Secp256k1.N);
 			var q = pubkey.ECKey.GetPublicKeyParameters().Q.Normalize();
 			var P = Secp256k1.Curve.CreatePoint(q.XCoord.ToBigInteger(), q.YCoord.ToBigInteger());
 
@@ -145,7 +145,7 @@ namespace NBitcoin.Crypto
 				if (sig.R.CompareTo(PP) >= 0 || sig.S.CompareTo(Secp256k1.N) >= 0)
 					return false;
 
-				var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkeys[i].ToBytes(), m[i].ToBytes(false)))).Mod(Secp256k1.N);
+				var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkeys[i].ToBytes(), m[i].ToBytes()))).Mod(Secp256k1.N);
 				var c = sig.R.Pow(3).Add(BigInteger.ValueOf(7)).Mod(PP);
 				var y = c.ModPow(PP.Add(BigInteger.One).Divide(BigInteger.ValueOf(4)), PP);
 				if (!y.ModPow(BigInteger.Two, PP).Equals(c))
