@@ -74,6 +74,7 @@ namespace NBitcoin.Crypto
 		}
 	}
 
+#if !HAS_SPAN
 	public class SchnorrSigner
 	{
 		private static X9ECParameters Secp256k1 = NBitcoin.BouncyCastle.Crypto.EC.CustomNamedCurves.Secp256k1;
@@ -86,9 +87,6 @@ namespace NBitcoin.Crypto
 
 		public SchnorrSignature Sign(uint256 m, BigInteger secret)
 		{
-#if HAS_SPAN
-			throw new NotImplementedException();
-#else
 			var k = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(secret, 32).Concat(m.ToBytes())));
 			var R = Secp256k1.G.Multiply(k).Normalize();
 			var Xr = R.XCoord.ToBigInteger();
@@ -102,14 +100,10 @@ namespace NBitcoin.Crypto
 
 			var s = k.Add(e.Multiply(secret)).Mod(Secp256k1.N);
 			return new SchnorrSignature(Xr, s);
-#endif
 		}
 
 		public bool Verify(uint256 m, PubKey pubkey, SchnorrSignature sig)
 		{
-#if HAS_SPAN
-			throw new NotImplementedException();
-#else
 			if (sig.R.CompareTo(PP) >= 0 || sig.S.CompareTo(Secp256k1.N) >= 0)
 				return false;
 			var e = new BigInteger(1, Hashes.SHA256(Utils.BigIntegerToBytes(sig.R, 32).Concat(pubkey.ToBytes(), m.ToBytes()))).Mod(Secp256k1.N);
@@ -124,7 +118,6 @@ namespace NBitcoin.Crypto
 				return false;
 
 			return true;
-#endif
 		}
 
 		public static bool BatchVerify(uint256[] m, PubKey[] pubkeys, SchnorrSignature[] sigs, BigInteger[] rnds)
@@ -133,9 +126,6 @@ namespace NBitcoin.Crypto
 				throw new ArgumentException("Invalid array lengths");
 			if (rnds.Any(r => r.CompareTo(BigInteger.Zero) <= 0 || r.CompareTo(Secp256k1.N) >= 0))
 				throw new ArgumentException("Random numbers are out of range");
-#if HAS_SPAN
-			throw new NotImplementedException();
-#else
 			var s = BigInteger.Zero;
 			var r1 = Secp256k1.Curve.Infinity;
 			var r2 = Secp256k1.Curve.Infinity;
@@ -161,7 +151,7 @@ namespace NBitcoin.Crypto
 				r2 = r2.Add(P.Multiply(e.Multiply(a)));
 			}
 			return Secp256k1.G.Multiply(s).Equals(r1.Add(r2));
-#endif
 		}
 	}
+#endif
 }
