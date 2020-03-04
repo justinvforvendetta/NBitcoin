@@ -26,6 +26,10 @@ namespace NBitcoin
 #if HAS_SPAN
 		internal static Crypto.ECDSASignature Sign(this Secp256k1.ECPrivKey key, uint256 h, bool enforceLowR)
 		{
+			return new Crypto.ECDSASignature(key.Sign(h, enforceLowR, out _));
+		}
+		internal static Secp256k1.SecpECDSASignature Sign(this Secp256k1.ECPrivKey key, uint256 h, bool enforceLowR, out int recid)
+		{
 			Span<byte> hash = stackalloc byte[32];
 			h.ToBytes(hash);
 			byte[] extra_entropy = null;
@@ -33,7 +37,7 @@ namespace NBitcoin
 			Span<byte> vchSig = stackalloc byte[Secp256k1.SecpECDSASignature.MaxLength];
 			Secp256k1.SecpECDSASignature sig;
 			uint counter = 0;
-			bool ret = key.TrySignECDSA(hash, out sig);
+			bool ret = key.TrySignECDSA(hash, null, out recid, out sig);
 			// Grind for low R
 			while (ret && sig.r.IsHigh && enforceLowR)
 			{
@@ -43,9 +47,9 @@ namespace NBitcoin
 					nonceFunction = new Secp256k1.RFC6979NonceFunction(extra_entropy);
 				}
 				Utils.ToBytes(++counter, true, extra_entropy.AsSpan());
-				ret = key.TrySignECDSA(hash, nonceFunction, out sig);
+				ret = key.TrySignECDSA(hash, nonceFunction, out recid, out sig);
 			}
-			return new Crypto.ECDSASignature(sig);
+			return sig;
 		}
 #endif
 		/// <summary>

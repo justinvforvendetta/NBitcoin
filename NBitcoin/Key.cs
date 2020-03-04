@@ -175,7 +175,14 @@ namespace NBitcoin
 		{
 			if (hash is null)
 				throw new ArgumentNullException(nameof(hash));
-
+#if HAS_SPAN
+			Span<byte> vchSig = stackalloc byte[65];
+			int rec = -1;
+			var sig = new Secp256k1.SecpRecoverableECDSASignature(_ECKey.Sign(hash, forceLowR, out rec), rec);
+			sig.WriteToSpanCompact(vchSig.Slice(1), out int recid);
+			vchSig[0] = (byte)(27 + rec + (IsCompressed ? 4 : 0));
+			return vchSig.ToArray();
+#else
 			var sig = _ECKey.Sign(hash, forceLowR);
 			// Now we have to work backwards to figure out the recId needed to recover the signature.
 			int recId = -1;
@@ -201,6 +208,7 @@ namespace NBitcoin
 			Array.Copy(Utils.BigIntegerToBytes(sig.R, 32), 0, sigData, 1, 32);
 			Array.Copy(Utils.BigIntegerToBytes(sig.S, 32), 0, sigData, 33, 32);
 			return sigData;
+#endif
 		}
 
 
@@ -237,7 +245,7 @@ namespace NBitcoin
 #endif
 		}
 
-		#endregion
+#endregion
 
 		public string Decrypt(string encryptedText)
 		{
