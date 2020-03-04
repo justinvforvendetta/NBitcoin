@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if HAS_SPAN
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -15,7 +17,7 @@ namespace NBitcoin.Secp256k1
 			this.s = s;
 		}
 
-		public static bool TryCreate(ReadOnlySpan<byte> in64, out SecpSchnorrSignature signature)
+		public static bool TryCreate(ReadOnlySpan<byte> in64, out SecpSchnorrSignature? signature)
 		{
 			signature = null;
 			if (in64.Length < 64)
@@ -38,3 +40,4 @@ namespace NBitcoin.Secp256k1
 		}
 	}
 }
+#endif

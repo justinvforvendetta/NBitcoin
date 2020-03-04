@@ -20,7 +20,7 @@ namespace NBitcoin.Secp256k1
 			this.recid = recid;
 		}
 
-		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, int recid, out SecpRecoverableECDSASignature sig)
+		public static bool TryCreateFromCompact(ReadOnlySpan<byte> in64, int recid, out SecpRecoverableECDSASignature? sig)
 		{
 			sig = null;
 			if (SecpECDSASignature.TryCreateFromCompact(in64, out var compact) && compact is SecpECDSASignature)
