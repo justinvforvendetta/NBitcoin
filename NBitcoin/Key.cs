@@ -263,9 +263,6 @@ namespace NBitcoin
 
 			if (encrypted.Length < 85)
 				throw new ArgumentException("Encrypted text is invalid, it should be length >= 85.");
-#if HAS_SPAN
-			throw new NotImplementedException();
-#else
 			var magic = encrypted.SafeSubarray(0, 4);
 			var ephemeralPubkeyBytes = encrypted.SafeSubarray(4, 33);
 			var cipherText = encrypted.SafeSubarray(37, encrypted.Length - 32 - 37);
@@ -274,9 +271,6 @@ namespace NBitcoin
 				throw new ArgumentException("Encrypted text is invalid, Invalid magic number.");
 
 			var ephemeralPubkey = new PubKey(ephemeralPubkeyBytes);
-			var ecpoint = ephemeralPubkey.ECKey.GetPublicKeyParameters().Q;
-			if (ecpoint.IsInfinity || !ecpoint.IsValid())
-				throw new ArgumentException("Encrypted text is invalid, Invalid ephemeral public key.");
 
 			var sharedKey = Hashes.SHA512(ephemeralPubkey.GetSharedPubkey(this).ToBytes());
 			var iv = sharedKey.SafeSubarray(0, 16);
@@ -290,7 +284,6 @@ namespace NBitcoin
 			var aes = new AesBuilder().SetKey(encryptionKey).SetIv(iv).IsUsedForEncryption(false).Build();
 			var message = aes.Process(cipherText, 0, cipherText.Length);
 			return message;
-#endif
 		}
 
 		public Key Derivate(byte[] cc, uint nChild, out byte[] ccChild)
