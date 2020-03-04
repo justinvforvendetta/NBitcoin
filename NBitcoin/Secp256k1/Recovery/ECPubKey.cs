@@ -76,7 +76,7 @@ namespace NBitcoin.Secp256k1
 			u2 = rn * sigs;
 			qj = ctx.ECMultiply(xj, u2, u1);
 			pubkey = qj.ToGroupElementVariable();
-			return qj.IsInfinity;
+			return !qj.IsInfinity;
 		}
 		[Conditional("SECP256K1_VERIFY")]
 		private static void VERIFY_CHECK(bool value)

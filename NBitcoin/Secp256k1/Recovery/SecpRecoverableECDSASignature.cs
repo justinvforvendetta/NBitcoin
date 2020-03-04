@@ -9,11 +9,12 @@ namespace NBitcoin.Secp256k1
 		private readonly Scalar r;
 		private readonly Scalar s;
 		private readonly int recid;
-
-		public SecpRecoverableECDSASignature(in Scalar r, in Scalar s, int recid)
+		public SecpRecoverableECDSASignature(SecpECDSASignature sig, int recid)
 		{
-			this.r = r;
-			this.s = s;
+			if (sig == null)
+				throw new ArgumentNullException(nameof(sig));
+			this.r = sig.r;
+			this.s = sig.s;
 			this.recid = recid;
 		}
 
@@ -22,7 +23,7 @@ namespace NBitcoin.Secp256k1
 			sig = null;
 			if (SecpECDSASignature.TryCreateFromCompact(in64, out var compact) && compact is SecpECDSASignature)
 			{
-				sig = new SecpRecoverableECDSASignature(compact.r, compact.s, recid);
+				sig = new SecpRecoverableECDSASignature(compact, recid);
 				return true;
 			}
 			return false;
@@ -33,6 +34,20 @@ namespace NBitcoin.Secp256k1
 			r = this.r;
 			s = this.s;
 			recid = this.recid;
+		}
+
+		public void WriteToSpanCompact(Span<byte> out32, out int recid)
+		{
+			if (out32.Length < 64)
+				throw new ArgumentException(paramName: nameof(out32), message: "out32 should be 32 bytes");
+			recid = this.recid;
+			r.WriteToSpan(out32);
+			s.WriteToSpan(out32.Slice(32));
+		}
+
+		public SecpECDSASignature ToSignature()
+		{
+			return new SecpECDSASignature(r, s, false);
 		}
 	}
 }

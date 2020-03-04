@@ -3140,6 +3140,85 @@ namespace NBitcoin.Tests
 				}
 			}
 		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
+		public void run_recovery_tests()
+		{
+			int i;
+			for (i = 0; i < count; i++)
+			{
+				//test_ecdsa_recovery_api();
+			}
+			for (i = 0; i < 64 * count; i++)
+			{
+				test_ecdsa_recovery_end_to_end();
+			}
+			//test_ecdsa_recovery_edge_cases();
+		}
+
+		[Fact]
+		[Trait("UnitTest", "UnitTest")]
+		public void test_ecdsa_recovery_end_to_end()
+		{
+			var ctx = Context.Instance;
+			byte[] extra = new byte[32];
+			ECPrivKey privkey = null;
+			Span<byte> message = stackalloc byte[32];
+			SecpECDSASignature[] signature = new SecpECDSASignature[5];
+			SecpRecoverableECDSASignature[] rsignature = new SecpRecoverableECDSASignature[5];
+			byte[] sig = new byte[74];
+			ECPubKey pubkey;
+			ECPubKey recpubkey;
+			int recid = 0;
+
+			/* Generate a random key and message. */
+			{
+				Scalar msg, key;
+				msg = random_scalar_order_test();
+				key = random_scalar_order_test();
+				privkey = ctx.CreateECPrivKey(key);
+				key.WriteToSpan(message);
+			}
+
+			/* Construct and verify corresponding public key. */
+			//CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
+			pubkey = privkey.CreatePubKey();
+
+			/* Serialize/parse compact and verify/recover. */
+			extra[0] = 0;
+			Assert.True(privkey.TrySignRecoverable(message, out rsignature[0]));
+			Assert.True(privkey.TrySignECDSA(message, out signature[0]));
+			Assert.True(privkey.TrySignRecoverable(message, out rsignature[4]));
+			Assert.True(privkey.TrySignRecoverable(message, new RFC6979NonceFunction(extra), out rsignature[1]));
+			extra[31] = 1;
+			Assert.True(privkey.TrySignRecoverable(message, new RFC6979NonceFunction(extra), out rsignature[2]));
+			extra[31] = 0;
+			extra[0] = 1;
+			Assert.True(privkey.TrySignRecoverable(message, new RFC6979NonceFunction(extra), out rsignature[3]));
+			rsignature[4].WriteToSpanCompact(sig.AsSpan(), out recid);
+			signature[4] = rsignature[4].ToSignature();
+			Assert.Equal(signature[4], signature[0]);
+			
+			Assert.True(pubkey.SigVerify(signature[4], message));
+			rsignature[4] = null;
+			Assert.True(SecpRecoverableECDSASignature.TryCreateFromCompact(sig, recid, out rsignature[4]));
+			signature[4] = rsignature[4].ToSignature();
+			Assert.True(pubkey.SigVerify(signature[4], message));
+			/* Parse compact (with recovery id) and recover. */
+			Assert.True(SecpRecoverableECDSASignature.TryCreateFromCompact(sig, recid, out rsignature[4]));
+			Assert.True(ECPubKey.TryRecover(ctx, rsignature[4], message, out recpubkey));
+			Assert.Equal(pubkey, recpubkey);
+			/* Serialize/destroy/parse signature and verify again. */
+			rsignature[4].WriteToSpanCompact(sig, out recid);
+			sig[secp256k1_rand_bits(6)] += (byte)(1 + secp256k1_rand_int(255));
+			Assert.True(SecpRecoverableECDSASignature.TryCreateFromCompact(sig, recid, out rsignature[4]));
+			signature[4] = rsignature[4].ToSignature();
+			Assert.False(pubkey.SigVerify(signature[4], message));
+			/* Recover again */
+			Assert.True(!ECPubKey.TryRecover(ctx, rsignature[4] , message, out recpubkey) ||
+				  pubkey != recpubkey);
+		}
 	}
 }
 
