@@ -155,6 +155,11 @@ namespace NBitcoin.Secp256k1
 			return r.EqualsVariable(r2);
 		}
 
+		public static void Clear(ref FieldElement s)
+		{
+			s = FieldElement.Zero;
+		}
+
 		public readonly FieldElement InverseVariable()
 		{
 			return this.Inverse();

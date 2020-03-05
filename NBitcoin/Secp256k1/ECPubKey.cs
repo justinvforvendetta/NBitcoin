@@ -78,7 +78,7 @@ namespace NBitcoin.Secp256k1
 			if (!EC.Pubkey_parse(input, out compressed, out Q))
 				return false;
 			pubkey = new ECPubKey(Q, ctx);
-			Q = default;
+			GroupElement.Clear(ref Q);
 			return true;
 		}
 		public static bool TryCreateRawFormat(ReadOnlySpan<byte> input, Context ctx, out ECPubKey? pubkey)

@@ -218,8 +218,8 @@ namespace NBitcoin.Secp256k1
 				seckey = new ECPrivKey(sec, ctx, false);
 				tweakedPrivKey = seckey;
 			}
-			sec = default;
-			term = default;
+			Scalar.Clear(ref sec);
+			Scalar.Clear(ref term);
 			return ret;
 		}
 
@@ -616,7 +616,7 @@ namespace NBitcoin.Secp256k1
 			Scalar r, s;
 			r = default;
 			s = default;
-			Scalar non, msg;
+			Scalar non = default, msg;
 			bool ret = false;
 			int overflow = 0;
 			if (msg32.Length != 32)
@@ -651,10 +651,10 @@ namespace NBitcoin.Secp256k1
 				}
 				count++;
 			}
-			nonce32.Fill(0);
-			msg = default;
-			non = default;
-			seckey.Fill(0);
+			nonce32.Clear();
+			Scalar.Clear(ref msg);
+			Scalar.Clear(ref non);
+			seckey.Clear();
 
 			if (ret)
 			{
@@ -693,9 +693,9 @@ namespace NBitcoin.Secp256k1
 			n += message;
 			sigs = nonce.Inverse();
 			sigs *= n;
-			n = default;
-			rp = default;
-			r = default;
+			Scalar.Clear(ref n);
+			GroupElementJacobian.Clear(ref rp);
+			GroupElement.Clear(ref r);
 			if (sigs.IsZero)
 			{
 				return false;
@@ -761,8 +761,8 @@ namespace NBitcoin.Secp256k1
 			{
 				tweakedPrivkey = new ECPrivKey(sec, ctx, false);
 			}
-			sec = default;
-			factor = default;
+			Scalar.Clear(ref sec);
+			Scalar.Clear(ref factor);
 			return ret;
 		}
 
@@ -781,7 +781,7 @@ namespace NBitcoin.Secp256k1
 
 		public void Clear()
 		{
-			this.sec = default;
+			Scalar.Clear(ref sec);
 			this.cleared = true;
 		}
 		public ECPrivKey Clone()

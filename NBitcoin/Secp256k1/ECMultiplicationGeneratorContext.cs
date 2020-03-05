@@ -139,7 +139,7 @@ namespace NBitcoin.Secp256k1
 			} while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > Fp. */
 			/* Randomize the projection to defend against multiplier sidechannels. */
 			initial = initial.Rescale(s);
-			s = default;
+			FieldElement.Clear(ref s);
 			do
 			{
 				rng.Generate(nonce32);
@@ -155,8 +155,8 @@ namespace NBitcoin.Secp256k1
 			b = b.Negate();
 			blind = b;
 			initial = gb;
-			b = default;
-			gb = default;
+			Scalar.Clear(ref b);
+			GroupElementJacobian.Clear(ref gb);
 		}
 
 		internal void secp256k1_ecmult_gen(out GroupElementJacobian r, in Scalar gn)
@@ -190,8 +190,8 @@ namespace NBitcoin.Secp256k1
 				r += add;
 			}
 			bits = 0;
-			add = default;
-			gnb = default;
+			GroupElement.Clear(ref add);
+			Scalar.Clear(ref gnb);
 		}
 
 		[Conditional("SECP256K1_VERIFY")]

@@ -380,6 +380,11 @@ namespace NBitcoin.Secp256k1
 			return r;
 		}
 
+		public static void Clear(ref GroupElement groupElement)
+		{
+			groupElement = new GroupElement();
+		}
+
 		/* This is like `ECMULT_TABLE_GET_GE` but is constant time */
 		private GroupElement ECMULT_CONST_TABLE_GET_GE(Span<GroupElement> pre, int n, int w)
 		{

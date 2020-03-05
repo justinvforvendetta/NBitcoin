@@ -305,6 +305,11 @@ namespace NBitcoin.Secp256k1
 			return new GroupElementJacobian(rx, ry, rz, rinfinity);
 		}
 
+		public static void Clear(ref GroupElementJacobian groupElementJacobian)
+		{
+			groupElementJacobian = new GroupElementJacobian();
+		}
+
 		public readonly GroupElementJacobian DoubleVariable()
 		{
 			if (infinity)
