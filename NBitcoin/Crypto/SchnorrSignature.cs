@@ -10,7 +10,6 @@ using NBitcoin.BouncyCastle.Asn1.X9;
 using NBitcoin.BouncyCastle.Math.EC.Custom.Sec;
 using NBitcoin.DataEncoders;
 using NBitcoin.BouncyCastle.Math.EC;
-using NBitcoin.Secp256k1;
 
 namespace NBitcoin.Crypto
 {
@@ -60,7 +59,7 @@ namespace NBitcoin.Crypto
 			S = s;
 		}
 #else
-		internal SchnorrSignature(SecpSchnorrSignature secpShnorr)
+		internal SchnorrSignature(Secp256k1.SecpSchnorrSignature secpShnorr)
 		{
 			this.secpShnorr = secpShnorr;
 		}
