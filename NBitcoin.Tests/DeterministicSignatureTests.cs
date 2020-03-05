@@ -43,11 +43,6 @@ namespace NBitcoin.Tests
 		}
 
 		static Dictionary<string, DerObjectIdentifier> curves;
-		public DeterministicSignatureTests()
-		{
-
-
-		}
 
 		class DeterministicSigTest
 		{
@@ -264,7 +259,6 @@ namespace NBitcoin.Tests
 
 			var message = new uint256(Encoders.Hex.DecodeData("243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89"));
 			var blindedMessage = requester.BlindMessage(message, r.PubKey, key.PubKey);
-
 			var blindSignature = signer.Sign(blindedMessage);
 			var unblindedSignature = requester.UnblindSignature(blindSignature);
 

@@ -79,11 +79,10 @@ namespace NBitcoin.Crypto
 					goto retry;
 				var A1 = _v * Secp256k1.EC.G;
 				var A2 = _w * P;
-				var A = R.AddVariable(A1, out _).AddVariable(A2, out _);
+				var A = R.AddVariable(A1, out _).AddVariable(A2, out _).ToGroupElement();
 				t = A.x.Normalize();
 				if (t.IsZero)
 					goto retry;
-
 				using (var sha = new Crypto.HashStream(true))
 				{
 					message.ToBytes(tmp);
@@ -216,7 +215,7 @@ namespace NBitcoin.Crypto
 			var sG = (signature.S * Secp256k1.EC.G).ToGroupElement();
 			var cP = P * signature.C;
 			var R = cP + sG;
-			var t = R.x.Normalize();
+			var t = R.ToGroupElement().x.Normalize();
 			using var sha = new Crypto.HashStream(true);
 			Span<byte> tmp = stackalloc byte[32];
 			message.ToBytes(tmp);

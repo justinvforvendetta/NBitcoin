@@ -109,7 +109,7 @@ namespace NBitcoin.Secp256k1
 			e += k;
 
 			e.WriteToSpan(sig.Slice(32, 32));
-			k = default;
+			Scalar.Clear(ref k);
 			return SecpSchnorrSignature.TryCreate(sig, out signature);
 		}
 	}

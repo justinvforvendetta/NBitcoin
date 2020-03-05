@@ -1548,6 +1548,13 @@ namespace NBitcoin.Secp256k1
 			return false;
 		}
 
+		public readonly byte[] ToBytes()
+		{
+			var bytes = new byte[32];
+			WriteToSpan(bytes);
+			return bytes;
+		}
+
 		public readonly string ToC(string varName)
 		{
 			var normalizedStr = normalized ? "1" : "0";
