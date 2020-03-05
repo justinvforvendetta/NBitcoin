@@ -118,7 +118,7 @@ namespace NBitcoin.Tests
 					"00DA9B08172A9B6F0466A2DEFD817F2D7AB437E0D253CB5395A963866B3574BE00880371D01766935B92D2AB4CD5C8A2A5837EC57FED7660773A05F0DE142380"}
 			};
 
-			var messages = vectors.Select(v => uint256.Parse(v[1])).ToArray();
+			var messages = vectors.Select(v => Parseuint256(v[1])).ToArray();
 			var pubkeys = vectors.Select(v => new PubKey(Encoders.Hex.DecodeData(v[0]))).ToArray();
 			var signatures = vectors.Select(v => SchnorrSignature.Parse(v[2])).ToArray();
 
