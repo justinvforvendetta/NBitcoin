@@ -52,25 +52,28 @@ namespace NBitcoin.Crypto
 #endif
 		}
 
-#if !HAS_SPAN
-		public SchnorrSignature(BigInteger r, BigInteger s)
-		{
-			R = r;
-			S = s;
-		}
-#else
+#if HAS_SPAN
 		internal SchnorrSignature(Secp256k1.SecpSchnorrSignature secpShnorr)
 		{
 			this.secpShnorr = secpShnorr;
 		}
-#endif
-
 		public byte[] ToBytes()
 		{
 			var buf = new byte[64];
 			this.secpShnorr.WriteToSpan(buf);
 			return buf;
 		}
+#else
+		public SchnorrSignature(BigInteger r, BigInteger s)
+		{
+			R = r;
+			S = s;
+		}
+		public byte[] ToBytes()
+		{
+			return Utils.BigIntegerToBytes(R, 32).Concat(Utils.BigIntegerToBytes(S, 32));
+		}
+#endif
 	}
 
 #if !HAS_SPAN
