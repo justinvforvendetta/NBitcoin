@@ -13,11 +13,14 @@
 	  <!--<TargetFrameworks Condition="'$(BuildingInsideVisualStudio)' == 'true' And '$(MSBuildRuntimeType)' == 'Core' ">netcoreapp2.1</TargetFrameworks>-->
 	  <!--<NoWarn>CS0618</NoWarn>-->
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);NOCONSENSUSLIB</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(AdditionalDefineConstants)' != '' ">
     <DefineConstants>$(DefineConstants);$(AdditionalDefineConstants)</DefineConstants>
   </PropertyGroup>
 	<PropertyGroup Condition=" '$(TargetFramework)' == 'net461' ">
-		<DefineConstants>$(DefineConstants);WIN;NOCONSENSUSLIB</DefineConstants>
+		<DefineConstants>$(DefineConstants);WIN</DefineConstants>
 	</PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' Or '$(TargetFramework)' == 'netcoreapp3.1' ">
     <DefineConstants>$(DefineConstants);NETCORE;NOTRACESOURCE;NOCUSTOMSSLVALIDATION;NOHTTPSERVER</DefineConstants>
