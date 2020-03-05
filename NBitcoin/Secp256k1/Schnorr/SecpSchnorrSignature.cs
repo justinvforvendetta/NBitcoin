@@ -11,7 +11,7 @@ namespace NBitcoin.Secp256k1
 		internal readonly FieldElement rx;
 		internal readonly Scalar s;
 
-		private SecpSchnorrSignature(FieldElement rx, Scalar s)
+		internal SecpSchnorrSignature(FieldElement rx, Scalar s)
 		{
 			this.rx = rx;
 			this.s = s;
