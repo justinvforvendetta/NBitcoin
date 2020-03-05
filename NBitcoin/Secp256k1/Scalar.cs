@@ -121,6 +121,11 @@ namespace NBitcoin.Secp256k1
 			VERIFY_CHECK(CheckOverflow() == 0);
 		}
 
+		public static void Clear(ref Scalar s)
+		{
+			s = Scalar.Zero;
+		}
+
 		internal readonly Scalar CAddBit(uint bit, int flag)
 		{
 			Span<uint> d = stackalloc uint[DCount];
