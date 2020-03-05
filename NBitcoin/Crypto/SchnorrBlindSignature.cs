@@ -77,7 +77,7 @@ namespace NBitcoin.Crypto
 				_w = new Secp256k1.Scalar(tmp, out overflow);
 				if (overflow != 0 || _v.IsZero)
 					goto retry;
-				NBitcoin.Secp256k1.Context.Instance.ECMultiplicationGeneratorContext.secp256k1_ecmult_gen(out var A1, _v);
+				NBitcoinContext.Instance.ECMultiplicationGeneratorContext.secp256k1_ecmult_gen(out var A1, _v);
 				var A2 = _w * P;
 				var A = R.AddVariable(A1, out _).AddVariable(A2, out _).ToGroupElement();
 				t = A.x.Normalize();

@@ -62,7 +62,7 @@ namespace NBitcoin
 			while (true)
 			{
 				RandomUtils.GetBytes(data);
-				if (Secp256k1.Context.Instance.TryCreateECPrivKey(data, out var key) && key is Secp256k1.ECPrivKey)
+				if (NBitcoinContext.Instance.TryCreateECPrivKey(data, out var key) && key is Secp256k1.ECPrivKey)
 				{
 					_ECKey = key;
 					return;
@@ -89,7 +89,7 @@ namespace NBitcoin
 				throw new ArgumentException(paramName: "data", message: $"The size of an EC key should be {KEY_SIZE}");
 			}
 #if HAS_SPAN
-			if (Secp256k1.Context.Instance.TryCreateECPrivKey(data.AsSpan().Slice(0, KEY_SIZE), out var key) && key is Secp256k1.ECPrivKey)
+			if (NBitcoinContext.Instance.TryCreateECPrivKey(data.AsSpan().Slice(0, KEY_SIZE), out var key) && key is Secp256k1.ECPrivKey)
 			{
 				IsCompressed = fCompressedIn;
 				_ECKey = key;
@@ -234,7 +234,7 @@ namespace NBitcoin
 			if (!stream.Serializing)
 			{
 				stream.ReadWrite(ref tmp);
-				if (Secp256k1.Context.Instance.TryCreateECPrivKey(tmp, out var k) && k is Secp256k1.ECPrivKey)
+				if (NBitcoinContext.Instance.TryCreateECPrivKey(tmp, out var k) && k is Secp256k1.ECPrivKey)
 				{
 					_ECKey = k;
 				}
@@ -360,7 +360,7 @@ namespace NBitcoin
 #if HAS_SPAN
 			Span<byte> tmp = stackalloc byte[33];
 			ephem.ECKey.GetSharedPubkey(scan._ECKey).WriteToSpan(true, tmp, out _);
-			var c = Secp256k1.Context.Instance.CreateECPrivKey(Hashes.SHA256(tmp));
+			var c = NBitcoinContext.Instance.CreateECPrivKey(Hashes.SHA256(tmp));
 			var priv = c.sec + this._ECKey.sec;
 			return new Key(this._ECKey.ctx.CreateECPrivKey(priv), this.IsCompressed);
 #else

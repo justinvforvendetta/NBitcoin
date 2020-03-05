@@ -97,7 +97,7 @@ namespace NBitcoin.Secp256k1
 			Blind();
 		}
 
-		private void Blind(byte[]? seed32 = null)
+		public void Blind(byte[]? seed32 = null)
 		{
 			Scalar b;
 			GroupElementJacobian gb;

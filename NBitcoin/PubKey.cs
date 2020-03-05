@@ -69,7 +69,7 @@ namespace NBitcoin
 			if (bytes == null)
 				throw new ArgumentNullException(nameof(bytes));
 #if HAS_SPAN
-			if (Secp256k1.Context.Instance.TryCreatePubKey(bytes, out compressed, out var p) && p is Secp256k1.ECPubKey)
+			if (NBitcoinContext.Instance.TryCreatePubKey(bytes, out compressed, out var p) && p is Secp256k1.ECPubKey)
 			{
 				_ECKey = p;
 			}
@@ -160,7 +160,7 @@ namespace NBitcoin
 			if (!deep || !quick)
 				return quick;
 #if HAS_SPAN
-			return Secp256k1.Context.Instance.TryCreatePubKey(data.AsSpan().Slice(offset, count), out _);
+			return NBitcoinContext.Instance.TryCreatePubKey(data.AsSpan().Slice(offset, count), out _);
 #else
 			try
 			{
@@ -365,7 +365,7 @@ namespace NBitcoin
 			{
 				Span<byte> tmp = stackalloc byte[compressed ? 33 : 65];
 				stream.ReadWrite(ref tmp);
-				if (Secp256k1.Context.Instance.TryCreatePubKey(tmp, out var p) && p is Secp256k1.ECPubKey)
+				if (NBitcoinContext.Instance.TryCreatePubKey(tmp, out var p) && p is Secp256k1.ECPubKey)
 				{
 					_ECKey = p;
 				}
@@ -529,7 +529,7 @@ namespace NBitcoin
 			Secp256k1.ECPubKey pubkey;
 			Secp256k1.SecpRecoverableECDSASignature sig;
 			if (Secp256k1.SecpRecoverableECDSASignature.TryCreateFromCompact(s.Slice(1), recid, out sig) && sig is Secp256k1.SecpRecoverableECDSASignature &&
-				Secp256k1.ECPubKey.TryRecover(Secp256k1.Context.Instance, sig, msg, out pubkey) && pubkey is Secp256k1.ECPubKey)
+				Secp256k1.ECPubKey.TryRecover(NBitcoinContext.Instance, sig, msg, out pubkey) && pubkey is Secp256k1.ECPubKey)
 			{
 				return new PubKey(pubkey, fComp);
 			}
@@ -665,7 +665,7 @@ namespace NBitcoin
 #if HAS_SPAN
 			Span<byte> tmp = stackalloc byte[33];
 			pub._ECKey.GetSharedPubkey(priv._ECKey).WriteToSpan(true, tmp, out _);
-			var c = Secp256k1.Context.Instance.CreateECPrivKey(Hashes.SHA256(tmp));
+			var c = NBitcoinContext.Instance.CreateECPrivKey(Hashes.SHA256(tmp));
 			//Q' = Q + cG
 			var qprime = Secp256k1.EC.G.ECMultiplyConst(c.sec, 256).Add(this.ECKey.Q);
 			return new PubKey(new Secp256k1.ECPubKey(qprime.ToGroupElement(), this._ECKey.ctx), this.IsCompressed);
